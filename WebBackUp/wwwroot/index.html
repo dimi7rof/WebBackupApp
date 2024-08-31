@@ -1,0 +1,53 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dimi7rof Backup app</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/@microsoft/signalr@7/dist/browser/signalr.min.js"></script>
+</head>
+<body>
+    <div class="center">
+        <h1>Dimi7rof Backup app</h1>
+    </div>
+
+    <!-- Set Selection Dropdown -->
+    <div class="set-selection">
+        <label for="setSelector"><strong>Select Device type:</strong></label>
+        <select id="setSelector">
+            <option value="set1">Phone</option>
+            <option value="set2">HDD</option>
+            <option value="set3">SD Card</option>
+        </select>
+    </div>
+
+    <!-- Dynamic Paths Container -->
+    <div id="pathsContainer">
+        <div class="input-row">
+            <label for="sourcePath1">Source Directory 1:</label>
+            <input type="text" id="sourcePath1" name="sourcePath1" required>
+
+            <label for="destinationPath1">Destination Full Path 1:</label>
+            <input type="text" id="destinationPath1" name="destinationPath1" required>
+        </div>
+    </div>
+
+    <!-- Button to Add More Paths -->
+    <button id="addPathButton">+</button><br><br>
+
+    <!-- Action Buttons -->
+    <div class="button-group2">
+        <button id="saveButton">Save Directories</button>
+        <button id="loadButton">Load Directories</button>
+    </div>
+    <div class="button-group">
+        <button id="executeButton">Backup photos</button>
+    </div>
+    <div>
+        <h5><span id="result"></span></h5>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
