@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.SignalR;
-using System.Diagnostics;
 using System.Text.Json;
 using WebBackUp;
 
@@ -38,6 +37,36 @@ app.MapPost("/execute/{setId}", async (PathData pathData, string setId, IHubCont
             await hubContext.Clients.All.SendAsync("ReceiveProgress", "Downloading photos...\n");
 
             var result = Phone.Execute(pathData, async (message) =>
+            {
+                await hubContext.Clients.All.SendAsync("ReceiveProgress", message);
+            });
+
+            await hubContext.Clients.All.SendAsync("ReceiveProgress", result);
+        });
+    }
+
+    if (setId == "set2")
+    {
+        _ = Task.Run(async () =>
+        {
+            await hubContext.Clients.All.SendAsync("ReceiveProgress", "Backup photos...\n");
+
+            var result = Hdd.Execute(pathData, async (message) =>
+            {
+                await hubContext.Clients.All.SendAsync("ReceiveProgress", message);
+            });
+
+            await hubContext.Clients.All.SendAsync("ReceiveProgress", result);
+        });
+    }
+
+    if (setId == "set3")
+    {
+        _ = Task.Run(async () =>
+        {
+            await hubContext.Clients.All.SendAsync("ReceiveProgress", "Copy and delete oblolete mp3s...\n");
+
+            var result = SdCard.Execute(pathData, async (message) =>
             {
                 await hubContext.Clients.All.SendAsync("ReceiveProgress", message);
             });

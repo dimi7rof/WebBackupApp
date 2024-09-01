@@ -105,10 +105,10 @@ function addPathRow(index, sourcePath = '', destinationPath = '') {
     const newInputRow = document.createElement('div');
     newInputRow.className = 'input-row';
     newInputRow.innerHTML = `
-        <label for="sourcePath${index}">Source Directory ${index}:</label>
+        <label for="sourcePath${index}">Source ${index}:</label>
         <input type="text" id="sourcePath${index}" name="sourcePath${index}" value="${sourcePath}" required>
 
-        <label for="destinationPath${index}">Destination Full Path ${index}:</label>
+        <label for="destinationPath${index}">Destination ${index}:</label>
         <input type="text" id="destinationPath${index}" name="destinationPath${index}" value="${destinationPath}" required>
     `;
     container.appendChild(newInputRow);
