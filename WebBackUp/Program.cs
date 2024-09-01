@@ -30,7 +30,7 @@ app.UseStaticFiles();
 // API endpoint for executing logic
 app.MapPost("/execute/{setId}", async (PathData pathData, string setId, IHubContext<ProgressHub> hubContext) =>
 {
-    if (setId == "set1")
+    if (setId == "set1" || setId == "set4" || setId == "set5" || setId == "set6")
     {
         _ = Task.Run(async () =>
         {
@@ -74,6 +74,22 @@ app.MapPost("/execute/{setId}", async (PathData pathData, string setId, IHubCont
             await hubContext.Clients.All.SendAsync("ReceiveProgress", result);
         });
     }
+
+    else
+    {
+        _ = Task.Run(async () =>
+        {
+            await hubContext.Clients.All.SendAsync("ReceiveProgress", "Copy and delete oblolete mp3s...\n");
+
+            var result = Hdd.Execute(pathData, async (message) =>
+            {
+                await hubContext.Clients.All.SendAsync("ReceiveProgress", message);
+            });
+
+            await hubContext.Clients.All.SendAsync("ReceiveProgress", result);
+        });
+    }
+
     return Results.Ok();
 });
 
