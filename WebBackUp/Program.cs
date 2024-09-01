@@ -18,6 +18,12 @@ string GetSetName(string setId) => setId switch
     "set1" => "Phone",
     "set2" => "HDD",
     "set3" => "SD Card",
+    "set4" =>"Phone 2",
+    "set5" =>"Phone 3",
+    "set6" =>"Phone 4",
+    "set7" =>"HDD 2",
+    "set8" =>"HDD 3",
+    "set9" =>"HDD 4",
     _ => "Unknown"
 };
 
@@ -34,7 +40,7 @@ app.MapPost("/execute/{setId}", async (PathData pathData, string setId, IHubCont
     {
         _ = Task.Run(async () =>
         {
-            await hubContext.Clients.All.SendAsync("ReceiveProgress", "Downloading photos...\n");
+            await hubContext.Clients.All.SendAsync("ReceiveProgress", "\n");
 
             var result = Phone.Execute(pathData, async (message) =>
             {
@@ -49,7 +55,7 @@ app.MapPost("/execute/{setId}", async (PathData pathData, string setId, IHubCont
     {
         _ = Task.Run(async () =>
         {
-            await hubContext.Clients.All.SendAsync("ReceiveProgress", "Backup photos...\n");
+            await hubContext.Clients.All.SendAsync("ReceiveProgress", "\n");
 
             var result = Hdd.Execute(pathData, async (message) =>
             {
@@ -64,7 +70,7 @@ app.MapPost("/execute/{setId}", async (PathData pathData, string setId, IHubCont
     {
         _ = Task.Run(async () =>
         {
-            await hubContext.Clients.All.SendAsync("ReceiveProgress", "Copy and delete oblolete mp3s...\n");
+            await hubContext.Clients.All.SendAsync("ReceiveProgress", "\n");
 
             var result = SdCard.Execute(pathData, async (message) =>
             {
@@ -79,7 +85,7 @@ app.MapPost("/execute/{setId}", async (PathData pathData, string setId, IHubCont
     {
         _ = Task.Run(async () =>
         {
-            await hubContext.Clients.All.SendAsync("ReceiveProgress", "Copy and delete oblolete mp3s...\n");
+            await hubContext.Clients.All.SendAsync("ReceiveProgress", "\n");
 
             var result = Hdd.Execute(pathData, async (message) =>
             {

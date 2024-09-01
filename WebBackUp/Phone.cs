@@ -68,7 +68,7 @@ public static class Phone
             {
                 var sw1 = Stopwatch.StartNew();
                 var filePath = Path.Combine(destination, file.Name);
-                progressCallback($"Downloading: {filePath}").Wait();
+                progressCallback($"{filePath}").Wait();
                 using var stream = file.OpenRead();
                 using var fileStream = File.Create(filePath);
                 stream.CopyTo(fileStream);
@@ -78,7 +78,7 @@ public static class Phone
             count += missingFiles.Count;
         }
         sw.Stop();
-    
+
         return count == 0 ? string.Empty : $"Download of {count} files complete for {sw.Elapsed}.\n";
     }
 }
