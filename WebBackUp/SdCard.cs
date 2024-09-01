@@ -3,9 +3,9 @@ using System.Diagnostics;
 
 namespace WebBackUp;
 
-public class SdCard
+internal class SdCard
 {
-    public static string Execute(PathData pathData, Func<string, Task> progressCallback)
+    internal static string Execute(PathData pathData, Func<string, Task> progressCallback)
     {
         var lists = pathData.SourcePaths.Select((source, i) => (source, Destination: pathData.DestinationPaths[i]));
         var (_, letter) = lists.First();

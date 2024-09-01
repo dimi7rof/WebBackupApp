@@ -2,9 +2,9 @@
 
 namespace WebBackUp;
 
-public class Hdd
+internal class Hdd
 {
-    public static string Execute(PathData pathData, Func<string, Task> progressCallback)
+    internal static string Execute(PathData pathData, Func<string, Task> progressCallback)
     {
         var lists = pathData.SourcePaths.Select((source, i) => (source, Destination: pathData.DestinationPaths[i]));
         var (_, letter) = lists.First();
@@ -12,7 +12,6 @@ public class Hdd
         var totalFiles = 0;
         foreach (var (source, destination) in realPathList)
         {
-
             totalFiles += CopyDirectoriesAndFiles(source, destination, progressCallback);
         }
 
@@ -82,50 +81,6 @@ public class Hdd
             }
 
             files += CopyDirectoriesAndFiles(sourceDir, destinationDir, progressCallback);
-        }
-
-        return files;
-    }
-
-    private static int CopyFiles(string sourceDir, string destinationDir, Func<string, Task> progressCallback)
-    {
-
-        var sourceFiles = Directory.GetFiles(sourceDir);
-        var destinationFiles = Directory.GetFiles(destinationDir);
-
-        var missingFiles = sourceFiles.Where(x => !destinationFiles.Select(d => d.Split(Path.DirectorySeparatorChar).Last())
-            .Contains(x.Split(Path.DirectorySeparatorChar).Last())).ToList();
-
-        if (missingFiles.Count == 0)
-        {
-            return 0;
-        }
-
-        progressCallback($"Found {missingFiles.Count} files for backup...\n").Wait();
-
-        var files = 0;
-        foreach (var sourceFilePath in missingFiles)
-        {
-            var fileName = Path.GetFileName(sourceFilePath);
-            string destinationFilePath = Path.GetRelativePath(destinationDir, sourceFilePath);
-            try
-            {
-                var sw = Stopwatch.StartNew();
-                File.Copy(sourceFilePath, destinationFilePath);
-
-                if (sw.ElapsedMilliseconds % 10000 == 0)
-                {
-                    progressCallback($"Copying {destinationFilePath}...\n").Wait();
-                }
-
-                sw.Stop();
-                progressCallback($"{sw.ElapsedMilliseconds} - {destinationFilePath}\n").Wait();
-                files++;
-            }
-            catch (Exception ex)
-            {
-                progressCallback($"Cannot copy file: {destinationFilePath}, {ex.Message}\n").Wait();
-            }
         }
 
         return files;

@@ -1,7 +1,7 @@
 ﻿namespace WebBackUp;
 
-public class PathData
+internal class PathData
 {
-    public List<string> SourcePaths { get; set; }
-    public List<string> DestinationPaths { get; set; }
+    public List<string> SourcePaths { get; set; } = [];
+    public List<string> DestinationPaths { get; set; } = [];
 }

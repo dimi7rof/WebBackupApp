@@ -5,19 +5,19 @@ using System.Runtime.Versioning;
 namespace WebBackUp;
 
 [SupportedOSPlatform("Windows")]
-public static class Phone
+internal static class Phone
 {
-    public static string Execute(PathData pathData, Func<string, Task> progressCallback)
+    internal static string Execute(PathData pathData, Func<string, Task> progressCallback)
     {
         var devices = MediaDevice.GetDevices().ToArray();
-        progressCallback($"Found {devices.Length} device(s): {string.Join(", ", devices.Select(x => x.FriendlyName))}\n").Wait();
-
         while (devices.Length == 0)
         {
             progressCallback("No devices found.\n").Wait();
             Task.Delay(2000).Wait();
             devices = MediaDevice.GetDevices().ToArray();
         }
+
+        progressCallback($"Found {devices.Length} device(s): {string.Join(", ", devices.Select(x => x.FriendlyName))}\n").Wait();
 
         var device = devices.First(); // Assuming the first device is the desired smartphone
 
