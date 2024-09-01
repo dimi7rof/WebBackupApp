@@ -1,5 +1,8 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using System.Text.Json;
+using WebBackUp.Hubs;
+using WebBackUp.Models;
+using WebBackUp.Utilities;
 
 namespace WebBackUp.Endpoints;
 
@@ -55,7 +58,7 @@ internal static class Backup
         });
     }
 
-    private static string GetFilePath(string setId) => $"{setId}_paths.json";
+    private static string GetFilePath(string setId) => Path.Combine("json", $"{setId}_paths.json");
 
     private static string GetSetName(string setId) => setId switch
     {

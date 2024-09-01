@@ -1,4 +1,4 @@
-﻿namespace WebBackUp;
+﻿namespace WebBackUp.Models;
 
 internal class PathData
 {

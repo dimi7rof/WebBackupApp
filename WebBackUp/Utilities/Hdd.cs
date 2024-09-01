@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
+using WebBackUp.Models;
 
-namespace WebBackUp;
+namespace WebBackUp.Utilities;
 
 internal class Hdd
 {

@@ -1,7 +1,8 @@
 ﻿using NAudio.Wave;
 using System.Diagnostics;
+using WebBackUp.Models;
 
-namespace WebBackUp;
+namespace WebBackUp.Utilities;
 
 internal class SdCard
 {

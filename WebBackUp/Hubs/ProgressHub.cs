@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 
-namespace WebBackUp;
+namespace WebBackUp.Hubs;
 
 internal class ProgressHub : Hub
 {

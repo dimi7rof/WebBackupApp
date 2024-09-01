@@ -1,5 +1,5 @@
-using WebBackUp;
 using WebBackUp.Endpoints;
+using WebBackUp.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 

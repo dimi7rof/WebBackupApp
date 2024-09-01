@@ -1,8 +1,9 @@
 ﻿using MediaDevices;
 using System.Diagnostics;
 using System.Runtime.Versioning;
+using WebBackUp.Models;
 
-namespace WebBackUp;
+namespace WebBackUp.Utilities;
 
 [SupportedOSPlatform("Windows")]
 internal static class Phone
@@ -10,11 +11,9 @@ internal static class Phone
     internal static string Execute(PathData pathData, Func<string, Task> progressCallback)
     {
         var devices = MediaDevice.GetDevices().ToArray();
-        while (devices.Length == 0)
+        if (devices.Length == 0)
         {
-            progressCallback("No devices found.\n").Wait();
-            Task.Delay(2000).Wait();
-            devices = MediaDevice.GetDevices().ToArray();
+            return "No devices found.\n";
         }
 
         progressCallback($"Found {devices.Length} device(s): {string.Join(", ", devices.Select(x => x.FriendlyName))}\n").Wait();
