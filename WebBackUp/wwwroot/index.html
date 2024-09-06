@@ -39,21 +39,30 @@
         </div>
     </div>
 
-    <!-- Button to Add More Paths -->
-    <button id="addPathButton">+</button><br><br>
+    <!-- Button to Add More Paths --> 
+    <div style="display: flex; justify-content: center; margin: 10px">
+        <button id="addPathButton">+</button>
+    </div>
 
     <!-- Action Buttons -->
-    <div class="button-group2">
-        <button id="saveButton">Save Directories</button>
-        <button id="loadButton">Load Directories</button>
+    <div class="button-group2" style="display: flex; justify-content: space-around;">
+        <button id="saveButton" style="padding:5px 20px; border-radius: 20px">Save Directories</button>
+        <button id="loadButton" style="padding:5px 20px; border-radius: 20px">Load Directories</button>
+        <button id="clearButton" style="padding:5px 20px; border-radius: 20px">Clear log list</button>
     </div>
     <div class="button-group">
-        <button id="executeButton">Execute</button>
+        <button id="executeButton" style="padding: 20px 30vw; border-radius: 50px;">Execute</button>
     </div>
     <div>
-        <h5><span id="result"></span></h5>
+        <h5><span id="result" ></span></h5>
     </div>
 
     <script src="script.js"></script>
+    <script>
+        // JavaScript to clear the content of the <span>
+        document.getElementById("clearButton").addEventListener("click", function () {
+            document.getElementById("result").innerHTML = "";
+        });
+    </script>
 </body>
 </html>

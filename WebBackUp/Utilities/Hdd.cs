@@ -5,7 +5,7 @@ namespace WebBackUp.Utilities;
 
 internal class Hdd
 {
-    internal static string Execute(PathData pathData, Func<string, Task> progressCallback)
+    internal static string Execute(PathData pathData, Func<string, Task> progressCallback, ILogger<Program> logger)
     {
         var lists = pathData.SourcePaths.Select((source, i) => (source, Destination: pathData.DestinationPaths[i]));
         var (_, letter) = lists.First();

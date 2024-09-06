@@ -8,7 +8,7 @@ const connection = new signalR.HubConnectionBuilder()
 // Start the connection and handle progress updates
 connection.on("ReceiveProgress", (message) => {
     const resultElement = document.getElementById("result");
-    resultElement.textContent += message;
+    resultElement.textContent += "\n" + message;
 });
 
 connection.start().catch(err => console.error(err.toString()));

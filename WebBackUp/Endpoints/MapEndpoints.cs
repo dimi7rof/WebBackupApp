@@ -2,14 +2,14 @@
 
 namespace WebBackUp.Endpoints;
 
-internal static class Endpoints
+internal static class MapEndpoints
 {
-    internal static void MapEndpoints(this WebApplication app)
+    internal static void Map(this WebApplication app)
     {
-        app.MapPost("/execute/{setId}", Backup.Execute);
+        app.MapPost("/execute/{setId}", Endpoints.Execute);
 
-        app.MapPost("/save/{setId}", Backup.Save);
+        app.MapPost("/save/{setId}", Endpoints.Save);
 
-        app.MapGet("/load/{setId}", Backup.Load);
+        app.MapGet("/load/{setId}", Endpoints.Load);
     }
 }

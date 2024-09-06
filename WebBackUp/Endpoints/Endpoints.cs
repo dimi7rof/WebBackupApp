@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.SignalR;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using System.Text.Json;
 using WebBackUp.Hubs;
 using WebBackUp.Models;
@@ -6,11 +7,12 @@ using WebBackUp.Utilities;
 
 namespace WebBackUp.Endpoints;
 
-internal static class Backup
+internal static class Endpoints
 {
-    internal static async Task<IResult> Execute(PathData pathData, string setId, IHubContext<ProgressHub> hubContext)
+    internal static async Task<IResult> Execute(PathData pathData, string setId,
+        IHubContext<ProgressHub> hubContext, [FromServices] ILogger<Program> logger)
     {
-        Func<PathData, Func<string, Task>, string> executor = setId switch
+        Func<PathData, Func<string, Task>, ILogger<Program>, string> executor = setId switch
         {
             "set1" or "set4" or "set5" or "set6" => Phone.Execute,
             "set2" => Hdd.Execute,
@@ -23,7 +25,7 @@ internal static class Backup
         var result = executor(pathData, async (message) =>
         {
             await hubContext.Clients.All.SendAsync("ReceiveProgress", message);
-        });
+        }, logger);
 
         await hubContext.Clients.All.SendAsync("ReceiveProgress", result);
 
@@ -32,12 +34,15 @@ internal static class Backup
 
     internal static IResult Save(PathData pathData, string setId)
     {
-        var filePath = GetFilePath(setId);
-        var jsonData = JsonSerializer.Serialize(pathData);
-        File.WriteAllText(filePath, jsonData);
+        var jsonData = JsonSerializer.Serialize(new PathData()
+        {
+            SourcePaths = pathData.SourcePaths.Where(s => !string.IsNullOrEmpty(s)).ToList(),
+            DestinationPaths = pathData.DestinationPaths.Where(s => !string.IsNullOrEmpty(s)).ToList()
+        });
 
-        var setName = GetSetName(setId);
-        return Results.Json(new { Message = $"Input values saved successfully for {setName}." });
+        File.WriteAllText(GetFilePath(setId), jsonData);
+
+        return Results.Json(new { Message = $"Input values saved successfully for {GetSetName(setId)}." });
     }
 
     internal static IResult Load(string setId)
@@ -48,8 +53,7 @@ internal static class Backup
             return Results.Json(new { SourcePaths = new List<string>(), DestinationPaths = new List<string>() });
         }
 
-        var jsonData = File.ReadAllText(filePath);
-        var pathData = JsonSerializer.Deserialize<PathData>(jsonData);
+        var pathData = JsonSerializer.Deserialize<PathData>(File.ReadAllText(filePath));
 
         return Results.Json(new
         {

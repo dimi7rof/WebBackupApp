@@ -51,6 +51,11 @@ h1 {
         font-size: 1em;
     }
 
+.button-group2 {
+    display: flex;
+    justify-content: space-around;
+}
+
 #result {
     font-weight: bold;
     white-space: pre-line; /* To preserve line breaks */
