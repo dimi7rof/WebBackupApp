@@ -1,4 +1,5 @@
-﻿using NAudio.Wave;
+﻿using Microsoft.Extensions.Logging;
+using NAudio.Wave;
 using System.Diagnostics;
 using WebBackUp.Models;
 
@@ -19,13 +20,15 @@ internal static class SdCard
             .Select(x => (x.source, $"{lists.First().Destination}{x.Destination[1..]}"))
             .ToList();
 
+        var sw = Stopwatch.StartNew();
         foreach (var (source, destination) in realPathList)
         {
             deletedFiles += DeleteFilesAndFolders(source, destination, progressCallback);
             totalFiles += CopyMissingItems(source, destination, progressCallback);
         }
 
-        return $"Transfer of {totalFiles} files completed.";
+        sw.Stop();
+        return $"Transfer of {totalFiles} files completed in {sw.Elapsed}.";
     }
 
     private static int CopyMissingItems(string sourcePath, string destinationPath, Func<string, Task> progressCallback)
@@ -39,7 +42,8 @@ internal static class SdCard
         var missingFiles = Directory.GetFiles(sourcePath, "*", SearchOption.AllDirectories)
             .Where(sourceFile => !File.Exists(Path.Combine(destinationPath, GetRelativePath(sourcePath, sourceFile))));
 
-        progressCallback($"Start transfering {missingFiles.Count()} files...").Wait();
+        var fileCountString = missingFiles.Count() == 1 ? "file" : "files";
+        progressCallback($"Found {missingFiles.Count()} new {fileCountString}").Wait();
 
         foreach (var file in missingFiles)
         {

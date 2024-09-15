@@ -18,7 +18,18 @@ internal static class Phone
         }
 
         logger.LogAndSendMessage($"Found {devices.Length} device(s): {string.Join(", ", devices.Select(x => x.FriendlyName))}", progressCallback);
-        var device = devices.First();
+
+        MediaDevice? device = null;
+        if (devices.Length == 1)
+        {
+            device = devices.First();
+        }
+        else
+        {
+            device = devices.Where(d => d.FriendlyName.Contains("samsung", StringComparison.CurrentCultureIgnoreCase)
+                || d.FriendlyName.Contains("xiaomi", StringComparison.CurrentCultureIgnoreCase)).First();
+        }
+
         logger.LogAndSendMessage($"Connected to the smartphone: {device.FriendlyName}", progressCallback);
 
         var sw = Stopwatch.StartNew();
@@ -92,10 +103,11 @@ internal static class Phone
         }
         sw.Stop();
 
-        var msg = $"Download of {count} files complete for {sw.Elapsed}.";
+        var msg = $"Download of {count} files complete in {sw.Elapsed}.";
         logger.LogAndSendMessage(msg, progressCallback);
 
-        return count == 0 ? string.Empty : msg;
+        device.Disconnect();
+        return string.Empty;
     }
 
     private static void LogAndSendMessage(this ILogger<Program> logger, string msg,  Func<string, Task> progressCallback)

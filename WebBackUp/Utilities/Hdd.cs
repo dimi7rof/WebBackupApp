@@ -10,12 +10,14 @@ internal static class Hdd
         var lists = pathData.SourcePaths.Select((source, i) => (source, Destination: pathData.DestinationPaths[i]));
         var (_, letter) = lists.First();
         var realPathList = lists.Skip(1).Select(x => (x.source, $"{letter}{x.Destination[1..]}")).ToList();
+        var sw = Stopwatch.StartNew();
         foreach (var (source, destination) in realPathList)
         {
             CopyDirectoriesAndFiles(source, destination, progressCallback, logger);
         }
 
-        logger.LogAndSendMessage($"Backup completed.", progressCallback);
+        sw.Stop();
+        logger.LogAndSendMessage($"Backup completed in {sw.Elapsed}.", progressCallback);
         return string.Empty;
     }
 
@@ -53,7 +55,8 @@ internal static class Hdd
                 return;
             }
 
-            logger.LogAndSendMessage($"Found {missingFiles.Count} files new files", progressCallback);
+            var file = missingFiles.Count == 1 ? "file" : "files";
+            logger.LogAndSendMessage($"Found {missingFiles.Count} new {file}", progressCallback);
 
             foreach (var sourceFilePath in missingFiles)
             {
