@@ -4,7 +4,7 @@ using WebBackUp.Models;
 
 namespace WebBackUp.Utilities;
 
-internal class SdCard
+internal static class SdCard
 {
     internal static string Execute(PathData pathData, Func<string, Task> progressCallback, ILogger<Program> logger)
     {
@@ -25,7 +25,7 @@ internal class SdCard
             totalFiles += CopyMissingItems(source, destination, progressCallback);
         }
 
-        return $"Backup of {totalFiles} files completed.\n";
+        return $"Transfer of {totalFiles} files completed.";
     }
 
     private static int CopyMissingItems(string sourcePath, string destinationPath, Func<string, Task> progressCallback)
@@ -39,43 +39,50 @@ internal class SdCard
         var missingFiles = Directory.GetFiles(sourcePath, "*", SearchOption.AllDirectories)
             .Where(sourceFile => !File.Exists(Path.Combine(destinationPath, GetRelativePath(sourcePath, sourceFile))));
 
+        progressCallback($"Start transfering {missingFiles.Count()} files...").Wait();
+
         foreach (var file in missingFiles)
         {
             var sw = Stopwatch.StartNew();
+            var destinationFile = Path.Combine(destinationPath, GetRelativePath(sourcePath, file));
             var msg = string.Empty;
-            string destinationFile = Path.Combine(destinationPath, GetRelativePath(sourcePath, file));
 
             try
             {
-                
                 using var mp3Reader = new Mp3FileReader(file);
+                var frame = mp3Reader.ReadNextFrame();
                 var mp3 = mp3Reader.Mp3WaveFormat;
-                if (mp3.SampleRate < 32000)
+                if (mp3.SampleRate < 44100)
                 {
-                    progressCallback($"Warning: Low sample rate: {mp3.SampleRate}\n").Wait();
+                    progressCallback($"Warning: Low sample rate: {mp3.SampleRate}").Wait();
                 }
-                else
+                if (frame.BitRate < 128_000)
                 {
-                    msg = $"SampleRate:{mp3.SampleRate}, Encoding:{mp3.Encoding}, Channels:{mp3.Channels}";
+                    progressCallback($"Warning: Low bitrate: {frame.BitRate}").Wait();
                 }
-
+                msg = $"{frame.BitRate / 1_000}kbps, {mp3.SampleRate}Hz, {mp3.Encoding}, {mp3.Channels} channels";
+                var dir = string.Join(Path.DirectorySeparatorChar, destinationFile.Split(Path.DirectorySeparatorChar).SkipLast(1));
+                if (!Directory.Exists(dir))
+                {
+                    Directory.CreateDirectory(dir);
+                }
                 File.Copy(file, destinationFile);
 
                 if (sw.ElapsedMilliseconds % 2000 == 0)
                 {
-                    progressCallback($"Copying {destinationFile}\n").Wait();
+                    progressCallback($"Copying {destinationFile}").Wait();
                 }
             }
             catch (Exception ex)
             {
-                progressCallback($"Cannot copy file: {file}, {ex.Message}\n").Wait();
+                progressCallback($"Cannot copy file: {file}, {ex.Message}").Wait();
                 var fileName = Path.GetFileName(file);
                 File.Copy(file, Path.Combine("D:\\Music\\SkodaError", fileName));
                 File.Delete(file);
             }
 
             sw.Stop();
-            progressCallback($"{destinationFile} - {sw.ElapsedMilliseconds} - {msg}\n").Wait();
+            progressCallback($"{sw.ElapsedMilliseconds.ToString().PadLeft(5, '0')} - {msg} - {destinationFile}").Wait();
             fileCount++;
         }
 
@@ -111,16 +118,16 @@ internal class SdCard
 
                 if (sw.ElapsedMilliseconds % 10000 == 0)
                 {
-                    progressCallback($"Deleting {file}...\n").Wait();
+                    progressCallback($"Deleting {file}...").Wait();
                 }
 
                 sw.Stop();
-                progressCallback($"{sw.ElapsedMilliseconds} - {file} - Deleted\n");
+                progressCallback($"{sw.ElapsedMilliseconds} - {file} - Deleted");
                 fileCount++;
             }
             catch (Exception ex)
             {
-                progressCallback($"Cannot delete file: {file}, {ex.Message}\n").Wait();
+                progressCallback($"Cannot delete file: {file}, {ex.Message}").Wait();
             }
         }
 
@@ -137,7 +144,7 @@ internal class SdCard
             }
             catch (Exception ex)
             {
-                progressCallback($"Cannot delete folder {folder}, {ex.Message}\n").Wait();
+                progressCallback($"Cannot delete folder {folder}, {ex.Message}").Wait();
             }
         }
     }

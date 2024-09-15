@@ -5,13 +5,13 @@ const connection = new signalR.HubConnectionBuilder()
     .withUrl("/progressHub")
     .build();
 
+
 // Start the connection and handle progress updates
+connection.start().catch(err => console.error(err.toString()));
 connection.on("ReceiveProgress", (message) => {
     const resultElement = document.getElementById("result");
-    resultElement.textContent += "\n" + message;
+    resultElement.innerHTML = message + "<br>" + resultElement.innerHTML;
 });
-
-connection.start().catch(err => console.error(err.toString()));
 
 // Load paths when a set is selected
 document.getElementById('setSelector').addEventListener('change', async () => {

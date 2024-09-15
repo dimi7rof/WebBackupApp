@@ -13,13 +13,13 @@ internal static class Phone
         var devices = MediaDevice.GetDevices().ToArray();
         if (devices.Length == 0)
         {
-            LogAndSendMessage("No devices found.", logger, progressCallback);
-            return "No devices found.\n";
+            logger.LogAndSendMessage("No devices found.", progressCallback);
+            return "No devices found.";
         }
 
-        LogAndSendMessage($"Found {devices.Length} device(s): {string.Join(", ", devices.Select(x => x.FriendlyName))}", logger, progressCallback);
+        logger.LogAndSendMessage($"Found {devices.Length} device(s): {string.Join(", ", devices.Select(x => x.FriendlyName))}", progressCallback);
         var device = devices.First();
-        LogAndSendMessage($"Connected to the smartphone: {device.FriendlyName}", logger, progressCallback);
+        logger.LogAndSendMessage($"Connected to the smartphone: {device.FriendlyName}", progressCallback);
 
         var sw = Stopwatch.StartNew();
         device.Connect();
@@ -27,12 +27,12 @@ internal static class Phone
         var rootDirectory = device.GetRootDirectory();
         if (rootDirectory == null)
         {
-            LogAndSendMessage("Unable to get root directory!", logger, progressCallback);
+            logger.LogAndSendMessage("Unable to get root directory!", progressCallback);
             return "Unable to get root directory!";
         }
 
         var internalStorage = rootDirectory.EnumerateDirectories().First();
-        var dcim = internalStorage.EnumerateDirectories().First(x => x.FullName.Contains("\\DCIM"));
+        var dcim = internalStorage.EnumerateDirectories().First(x => x.FullName.Contains($"{Path.DirectorySeparatorChar}DCIM"));
 
         var count = 0;
         var lists = pathData.SourcePaths.Select((x, i) => (x, pathData.DestinationPaths[i]));
@@ -40,13 +40,15 @@ internal static class Phone
         {
             if (!Directory.Exists(destination))
             {
+                logger.LogAndSendMessage($"Creating folder: {destination}", progressCallback);
+                //Task.Delay(2000).Wait();
                 Directory.CreateDirectory(destination);
             }
 
             var existingFiles = Directory.GetFiles(destination)
                 .ToDictionary(x => x.Split(Path.DirectorySeparatorChar).Last(), x => x);
 
-            var currentDir = dcim.EnumerateDirectories().FirstOrDefault(x => x.FullName.Contains($"\\{source}"))
+            var currentDir = dcim.EnumerateDirectories().FirstOrDefault(x => x.FullName.Contains($"{Path.DirectorySeparatorChar}{source}"))
                 ?? internalStorage.EnumerateDirectories()
                     .First(x => x.FullName.Contains($"{Path.DirectorySeparatorChar}Pictures")).EnumerateDirectories()
                     .FirstOrDefault(x => x.FullName.Contains($"{Path.DirectorySeparatorChar}{source}"))
@@ -58,7 +60,7 @@ internal static class Phone
 
             if (currentDir == null)
             {
-                LogAndSendMessage($"Directory {source} does not exist!", logger, progressCallback);
+                logger.LogAndSendMessage($"Directory {source} does not exist!", progressCallback);
                 continue;
             }
 
@@ -67,24 +69,23 @@ internal static class Phone
             if (missingFiles.Count == 0)
             {
                 var currentDirName = currentDir.FullName.Split(Path.DirectorySeparatorChar, StringSplitOptions.RemoveEmptyEntries).Skip(1);
-                LogAndSendMessage($"No new files found in {string.Join(Path.DirectorySeparatorChar, currentDirName)}", logger, progressCallback);
+                logger.LogAndSendMessage($"No new files found in {string.Join(Path.DirectorySeparatorChar, currentDirName)}", progressCallback);
                 continue;
             }
 
-            LogAndSendMessage($"Found {missingFiles.Count} new files for {destination}...", logger, progressCallback);
+            logger.LogAndSendMessage($"Found {missingFiles.Count} new files for {destination}...", progressCallback);
 
             foreach (var file in missingFiles)
             {
                 var sw1 = Stopwatch.StartNew();
                 var filePath = Path.Combine(destination, file.Name);
-                progressCallback($"{filePath}").Wait();
 
                 using var stream = file.OpenRead();
                 using var fileStream = File.Create(filePath);
                 stream.CopyTo(fileStream);
 
                 sw1.Stop();
-                progressCallback($" => Time:{sw1.ElapsedMilliseconds} ms\n").Wait();
+                progressCallback($"{filePath} => Time:{sw1.ElapsedMilliseconds} ms").Wait();
                 logger.LogInformation($"{filePath} => Time:{sw1.ElapsedMilliseconds} ms");
             }
             count += missingFiles.Count;
@@ -92,15 +93,15 @@ internal static class Phone
         sw.Stop();
 
         var msg = $"Download of {count} files complete for {sw.Elapsed}.";
-        logger.LogInformation(msg);
+        logger.LogAndSendMessage(msg, progressCallback);
 
-        return count == 0 ? string.Empty : msg + "\n";
+        return count == 0 ? string.Empty : msg;
     }
 
-    private static void LogAndSendMessage(string msg, ILogger<Program> logger, Func<string, Task> progressCallback)
+    private static void LogAndSendMessage(this ILogger<Program> logger, string msg,  Func<string, Task> progressCallback)
     {
         logger.LogInformation(msg);
-        progressCallback($"{msg}\n").Wait();
+        progressCallback($"{msg}").Wait();
     }
 }
 

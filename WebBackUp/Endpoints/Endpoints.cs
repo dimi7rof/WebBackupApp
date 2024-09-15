@@ -15,12 +15,11 @@ internal static class Endpoints
         Func<PathData, Func<string, Task>, ILogger<Program>, string> executor = setId switch
         {
             "set1" or "set4" or "set5" or "set6" => Phone.Execute,
-            "set2" => Hdd.Execute,
             "set3" => SdCard.Execute,
             _ => Hdd.Execute
         };
 
-        await hubContext.Clients.All.SendAsync("ReceiveProgress", "\n");
+        await hubContext.Clients.All.SendAsync("ReceiveProgress", "");
 
         var result = executor(pathData, async (message) =>
         {

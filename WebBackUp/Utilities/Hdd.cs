@@ -3,29 +3,28 @@ using WebBackUp.Models;
 
 namespace WebBackUp.Utilities;
 
-internal class Hdd
+internal static class Hdd
 {
     internal static string Execute(PathData pathData, Func<string, Task> progressCallback, ILogger<Program> logger)
     {
         var lists = pathData.SourcePaths.Select((source, i) => (source, Destination: pathData.DestinationPaths[i]));
         var (_, letter) = lists.First();
         var realPathList = lists.Skip(1).Select(x => (x.source, $"{letter}{x.Destination[1..]}")).ToList();
-        var totalFiles = 0;
         foreach (var (source, destination) in realPathList)
         {
-            totalFiles += CopyDirectoriesAndFiles(source, destination, progressCallback);
+            CopyDirectoriesAndFiles(source, destination, progressCallback, logger);
         }
 
-        return $"Backup of {totalFiles} files completed.";
+        logger.LogAndSendMessage($"Backup completed.", progressCallback);
+        return string.Empty;
     }
 
-    private static int CopyDirectoriesAndFiles(string source, string destination, Func<string, Task> progressCallback)
+    private static void CopyDirectoriesAndFiles(string source, string destination, Func<string, Task> progressCallback, ILogger<Program> logger)
     {
-
         var sourceDirs = Directory.GetDirectories(source);
         if (sourceDirs.Length == 0)
         {
-            return 0;
+            return;
         }
 
         var destinationDirs = Directory.GetDirectories(destination);
@@ -41,7 +40,6 @@ internal class Hdd
                 Destination: destinationDirs.First(d => d.Split(Path.DirectorySeparatorChar).Last() == sourceDir.Split(Path.DirectorySeparatorChar).Last())))
             .ToList();
 
-        var files = 0;
         foreach (var (sourceDir, destinationDir) in dirs)
         {
             var sourceFiles = Directory.GetFiles(sourceDir);
@@ -52,15 +50,15 @@ internal class Hdd
 
             if (missingFiles.Count == 0)
             {
-                return 0;
+                return;
             }
 
-            progressCallback($"Found {missingFiles.Count} files new files\n").Wait();
+            logger.LogAndSendMessage($"Found {missingFiles.Count} files new files", progressCallback);
 
             foreach (var sourceFilePath in missingFiles)
             {
                 var fileName = Path.GetFileName(sourceFilePath);
-                string destinationFilePath = Path.GetRelativePath(destinationDir, sourceFilePath);
+                string destinationFilePath = Path.Combine(destinationDir, fileName);
                 try
                 {
                     var sw = Stopwatch.StartNew();
@@ -68,22 +66,25 @@ internal class Hdd
 
                     if (sw.ElapsedMilliseconds % 10000 == 0)
                     {
-                        progressCallback($"Copying {destinationFilePath}...\n").Wait();
+                        logger.LogAndSendMessage($"Copying {destinationFilePath}...", progressCallback);
                     }
 
                     sw.Stop();
-                    progressCallback($"{sw.ElapsedMilliseconds} - {destinationFilePath}\n").Wait();
-                    files++;
+                    logger.LogAndSendMessage($"{sw.ElapsedMilliseconds} - {destinationFilePath}", progressCallback);
                 }
                 catch (Exception ex)
                 {
-                    progressCallback($"Cannot copy file: {destinationFilePath}, {ex.Message}\n").Wait();
+                    logger.LogAndSendMessage($"Cannot copy file: {destinationFilePath}, {ex.Message}", progressCallback);
                 }
             }
 
-            files += CopyDirectoriesAndFiles(sourceDir, destinationDir, progressCallback);
+            CopyDirectoriesAndFiles(sourceDir, destinationDir, progressCallback, logger);
         }
+    }
 
-        return files;
+    private static void LogAndSendMessage(this ILogger<Program> logger, string msg, Func<string, Task> progressCallback)
+    {
+        logger.LogInformation(msg);
+        progressCallback($"{msg}").Wait();
     }
 }

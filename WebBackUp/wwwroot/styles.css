@@ -59,4 +59,16 @@ h1 {
 #result {
     font-weight: bold;
     white-space: pre-line; /* To preserve line breaks */
+    display: block;
+    overflow-y: auto; /* Enable vertical scrolling */
+}
+
+#divResult {
+    display: block;
+    height: 50vh;
+    overflow-y: auto;
+    border: 1px solid #000;
+    padding: 10px;
+    margin: 10px;
+    background-color: gainsboro;
 }
