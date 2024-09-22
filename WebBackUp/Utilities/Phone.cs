@@ -13,8 +13,7 @@ internal static class Phone
         var devices = MediaDevice.GetDevices().ToArray();
         if (devices.Length == 0)
         {
-            logger.LogAndSendMessage("No devices found.", progressCallback);
-            return "No devices found.";
+            return "Device not found!";
         }
 
         logger.LogAndSendMessage($"Found {devices.Length} device(s): {string.Join(", ", devices.Select(x => x.FriendlyName))}", progressCallback);

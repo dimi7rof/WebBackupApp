@@ -10,6 +10,8 @@ internal static class Hdd
         var lists = pathData.SourcePaths.Select((source, i) => (source, Destination: pathData.DestinationPaths[i]));
         var (_, letter) = lists.First();
         var realPathList = lists.Skip(1).Select(x => (x.source, $"{letter}{x.Destination[1..]}")).ToList();
+        logger.LogAndSendMessage($"Backup of {realPathList.Count} directories started: {DateTime.Now}", progressCallback);
+
         var sw = Stopwatch.StartNew();
         foreach (var (source, destination) in realPathList)
         {
@@ -23,12 +25,18 @@ internal static class Hdd
 
     private static void CopyDirectoriesAndFiles(string source, string destination, Func<string, Task> progressCallback, ILogger<Program> logger)
     {
-        var sourceDirs = Directory.GetDirectories(source);
-        if (sourceDirs.Length == 0)
+        if (!Directory.Exists(source))
         {
+            logger.LogAndSendMessage($"Source directory '{source}' not found!", progressCallback);
             return;
         }
+        var sourceDirs = Directory.GetDirectories(source);
 
+        if (!Directory.Exists(destination))
+        {
+            logger.LogAndSendMessage($"Destination directory '{destination}' not found!", progressCallback);
+            return;
+        }
         var destinationDirs = Directory.GetDirectories(destination);
 
         var missingDirs = sourceDirs.Where(x => !destinationDirs.Select(d => d.Split(Path.DirectorySeparatorChar).Last())

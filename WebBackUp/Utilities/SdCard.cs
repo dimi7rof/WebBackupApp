@@ -20,19 +20,34 @@ internal static class SdCard
             .Select(x => (x.source, $"{lists.First().Destination}{x.Destination[1..]}"))
             .ToList();
 
+        logger.LogAndSendMessage($"Transfer of {realPathList.Count} directories started: {DateTime.Now}", progressCallback);
+
+
         var sw = Stopwatch.StartNew();
         foreach (var (source, destination) in realPathList)
         {
-            deletedFiles += DeleteFilesAndFolders(source, destination, progressCallback);
-            totalFiles += CopyMissingItems(source, destination, progressCallback);
+            deletedFiles += DeleteFilesAndFolders(source, destination, progressCallback, logger);
+            totalFiles += CopyMissingItems(source, destination, progressCallback, logger);
         }
 
         sw.Stop();
         return $"Transfer of {totalFiles} files completed in {sw.Elapsed}.";
     }
 
-    private static int CopyMissingItems(string sourcePath, string destinationPath, Func<string, Task> progressCallback)
+    private static int CopyMissingItems(string sourcePath, string destinationPath, Func<string, Task> progressCallback, ILogger<Program> logger)
     {
+        if (!Directory.Exists(sourcePath))
+        {
+            logger.LogAndSendMessage($"Source directory '{sourcePath}' not found!", progressCallback);
+            return 0;
+        }
+
+        if (!Directory.Exists(destinationPath))
+        {
+            logger.LogAndSendMessage($"Destination directory '{destinationPath}' not found!", progressCallback);
+            return 0;
+        }
+
         var fileCount = 0;
 
         var missingFolders = Directory.GetDirectories(sourcePath, "*", SearchOption.AllDirectories)
@@ -58,11 +73,11 @@ internal static class SdCard
                 var mp3 = mp3Reader.Mp3WaveFormat;
                 if (mp3.SampleRate < 44100)
                 {
-                    progressCallback($"Warning: Low sample rate: {mp3.SampleRate}").Wait();
+                    progressCallback($"[Warning] Low sample rate: {mp3.SampleRate}: '{destinationFile}'").Wait();
                 }
                 if (frame.BitRate < 128_000)
                 {
-                    progressCallback($"Warning: Low bitrate: {frame.BitRate}").Wait();
+                    progressCallback($"[Warning] Low bitrate: {frame.BitRate}: '{destinationFile}'").Wait();
                 }
                 msg = $"{frame.BitRate / 1_000}kbps, {mp3.SampleRate}Hz, {mp3.Encoding}, {mp3.Channels} channels";
                 var dir = string.Join(Path.DirectorySeparatorChar, destinationFile.Split(Path.DirectorySeparatorChar).SkipLast(1));
@@ -93,8 +108,20 @@ internal static class SdCard
         return fileCount;
     }
 
-    private static int DeleteFilesAndFolders(string sourcePath, string destinationPath, Func<string, Task> progressCallback)
+    private static int DeleteFilesAndFolders(string sourcePath, string destinationPath, Func<string, Task> progressCallback, ILogger<Program> logger)
     {
+        if (!Directory.Exists(sourcePath))
+        {
+            //logger.LogAndSendMessage($"Source directory '{sourcePath}' not found!", progressCallback);
+            return 0;
+        }
+
+        if (!Directory.Exists(destinationPath))
+        {
+            //logger.LogAndSendMessage($"Destination directory '{destinationPath}' not found!", progressCallback);
+            return 0;
+        }
+
         var dirsToDelete = Directory.GetDirectories(destinationPath, "*", SearchOption.AllDirectories)
             .Where(destinationDir => !Directory.Exists(Path.Combine(sourcePath, GetRelativePath(destinationPath, destinationDir))));
 
@@ -157,4 +184,12 @@ internal static class SdCard
     {
         return Path.GetRelativePath(basePath, fullPath);
     }
+
+
+    private static void LogAndSendMessage(this ILogger<Program> logger, string msg, Func<string, Task> progressCallback)
+    {
+        logger.LogInformation(msg);
+        progressCallback($"{msg}").Wait();
+    }
+
 }
