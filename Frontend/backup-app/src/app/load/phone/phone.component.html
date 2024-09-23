@@ -1,0 +1,10 @@
+<p>Phone Component Loaded</p>
+  <div id="pathsContainer" *ngIf="data">
+  <div *ngFor="let source of data.sourcePaths; let i = index" class="input-row">
+    <label [for]="'sourcePath' + i">Source {{ i + 1 }}:</label>
+    <input type="text" [id]="'sourcePath' + i" [name]="'sourcePath' + i" [value]="source" required>
+
+    <label [for]="'destinationPath' + i">Destination {{ i + 1 }}:</label>
+    <input type="text" [id]="'destinationPath' + i" [name]="'destinationPath' + i" [value]="data.destinationPaths[i]" required>
+  </div>
+</div>
