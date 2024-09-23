@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
-using NAudio.Wave;
+﻿using NAudio.Wave;
 using System.Diagnostics;
 using WebBackUp.Models;
 
@@ -20,7 +19,7 @@ internal static class SdCard
             .Select(x => (x.source, $"{lists.First().Destination}{x.Destination[1..]}"))
             .ToList();
 
-        logger.LogAndSendMessage($"Transfer of {realPathList.Count} directories started: {DateTime.Now}", progressCallback);
+        logger.LogAndSendMessage($"Transfer started: {DateTime.Now}", progressCallback);
 
 
         var sw = Stopwatch.StartNew();
@@ -31,7 +30,7 @@ internal static class SdCard
         }
 
         sw.Stop();
-        return $"Transfer of {totalFiles} files completed in {sw.Elapsed}.";
+        return $"Transfer of {totalFiles} files completed in {sw.Elapsed.Hours}h:{sw.Elapsed.Minutes}m:{sw.Elapsed.Seconds}s.";
     }
 
     private static int CopyMissingItems(string sourcePath, string destinationPath, Func<string, Task> progressCallback, ILogger<Program> logger)
@@ -58,7 +57,7 @@ internal static class SdCard
             .Where(sourceFile => !File.Exists(Path.Combine(destinationPath, GetRelativePath(sourcePath, sourceFile))));
 
         var fileCountString = missingFiles.Count() == 1 ? "file" : "files";
-        progressCallback($"Found {missingFiles.Count()} new {fileCountString}").Wait();
+        progressCallback($"{missingFiles.Count()} new {fileCountString} found.").Wait();
 
         foreach (var file in missingFiles)
         {
@@ -75,33 +74,38 @@ internal static class SdCard
                 {
                     progressCallback($"[Warning] Low sample rate: {mp3.SampleRate}: '{destinationFile}'").Wait();
                 }
-                if (frame.BitRate < 128_000)
+
+                var bitRate = mp3.AverageBytesPerSecond * 8 / 1000; 
+                if (bitRate < 128)
                 {
-                    progressCallback($"[Warning] Low bitrate: {frame.BitRate}: '{destinationFile}'").Wait();
+                    progressCallback($"[Warning] Low bitrate: {bitRate}: '{destinationFile}'").Wait();
                 }
-                msg = $"{frame.BitRate / 1_000}kbps, {mp3.SampleRate}Hz, {mp3.Encoding}, {mp3.Channels} channels";
+
+                msg = $"{bitRate}kbps, {mp3.SampleRate}Hz, {mp3.Encoding}, {mp3.Channels} channels";
+
                 var dir = string.Join(Path.DirectorySeparatorChar, destinationFile.Split(Path.DirectorySeparatorChar).SkipLast(1));
                 if (!Directory.Exists(dir))
                 {
                     Directory.CreateDirectory(dir);
                 }
+
                 File.Copy(file, destinationFile);
 
-                if (sw.ElapsedMilliseconds % 2000 == 0)
-                {
-                    progressCallback($"Copying {destinationFile}").Wait();
-                }
+                sw.Stop();
+                var time = double.Parse(sw.ElapsedMilliseconds.ToString()) / 1000;
+                progressCallback($"{time}s - {msg} - {destinationFile}").Wait();
             }
             catch (Exception ex)
             {
-                progressCallback($"Cannot copy file: {file}, {ex.Message}").Wait();
                 var fileName = Path.GetFileName(file);
                 File.Copy(file, Path.Combine("D:\\Music\\SkodaError", fileName));
                 File.Delete(file);
-            }
 
-            sw.Stop();
-            progressCallback($"{sw.ElapsedMilliseconds.ToString().PadLeft(5, '0')} - {msg} - {destinationFile}").Wait();
+                sw.Stop();
+                var time = double.Parse(sw.ElapsedMilliseconds.ToString()) / 1000;
+                progressCallback($"Failed: {time} - {msg} - {destinationFile},\n\t{ex.Message}").Wait();
+            }
+            
             fileCount++;
         }
 
@@ -110,15 +114,8 @@ internal static class SdCard
 
     private static int DeleteFilesAndFolders(string sourcePath, string destinationPath, Func<string, Task> progressCallback, ILogger<Program> logger)
     {
-        if (!Directory.Exists(sourcePath))
+        if (!Directory.Exists(sourcePath) || !Directory.Exists(destinationPath))
         {
-            //logger.LogAndSendMessage($"Source directory '{sourcePath}' not found!", progressCallback);
-            return 0;
-        }
-
-        if (!Directory.Exists(destinationPath))
-        {
-            //logger.LogAndSendMessage($"Destination directory '{destinationPath}' not found!", progressCallback);
             return 0;
         }
 
@@ -146,11 +143,6 @@ internal static class SdCard
             try
             {
                 File.Delete(file);
-
-                if (sw.ElapsedMilliseconds % 10000 == 0)
-                {
-                    progressCallback($"Deleting {file}...").Wait();
-                }
 
                 sw.Stop();
                 progressCallback($"{sw.ElapsedMilliseconds} - {file} - Deleted");

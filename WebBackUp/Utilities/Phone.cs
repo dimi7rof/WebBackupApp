@@ -51,7 +51,6 @@ internal static class Phone
             if (!Directory.Exists(destination))
             {
                 logger.LogAndSendMessage($"Creating folder: {destination}", progressCallback);
-                //Task.Delay(2000).Wait();
                 Directory.CreateDirectory(destination);
             }
 
