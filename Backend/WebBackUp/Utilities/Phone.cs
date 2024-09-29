@@ -1,0 +1,117 @@
+﻿using MediaDevices;
+using System.Diagnostics;
+using System.Runtime.Versioning;
+using WebBackUp.Models;
+
+namespace WebBackUp.Utilities;
+
+[SupportedOSPlatform("Windows")]
+internal static class Phone
+{
+    internal static string Execute(PathData pathData, ILogger<Program> logger)
+    {
+        Func<string, Task> progressCallback = null;
+        var devices = MediaDevice.GetDevices().ToArray();
+        if (devices.Length == 0)
+        {
+            return "Device not found!";
+        }
+
+        logger.LogAndSendMessage($"Found {devices.Length} device(s): {string.Join(", ", devices.Select(x => x.FriendlyName))}", progressCallback);
+
+        MediaDevice? device = null;
+        if (devices.Length == 1)
+        {
+            device = devices.First();
+        }
+        else
+        {
+            device = devices.Where(d => d.FriendlyName.Contains("samsung", StringComparison.CurrentCultureIgnoreCase)
+                || d.FriendlyName.Contains("xiaomi", StringComparison.CurrentCultureIgnoreCase)).First();
+        }
+
+        logger.LogAndSendMessage($"Connected to the smartphone: {device.FriendlyName}", progressCallback);
+
+        var sw = Stopwatch.StartNew();
+        device.Connect();
+
+        var rootDirectory = device.GetRootDirectory();
+        if (rootDirectory == null)
+        {
+            return "Unable to get root directory!";
+        }
+
+        var internalStorage = rootDirectory.EnumerateDirectories().First();
+        var dcim = internalStorage.EnumerateDirectories().First(x => x.FullName.Contains($"{Path.DirectorySeparatorChar}DCIM"));
+
+        var count = 0;
+        var lists = pathData.SourcePaths.Select((x, i) => (x, pathData.DestinationPaths[i]));
+        foreach (var (source, destination) in lists)
+        {
+            if (!Directory.Exists(destination))
+            {
+                logger.LogAndSendMessage($"Creating folder: {destination}", progressCallback);
+                Directory.CreateDirectory(destination);
+            }
+
+            var existingFiles = Directory.GetFiles(destination)
+                .ToDictionary(x => x.Split(Path.DirectorySeparatorChar).Last(), x => x);
+
+            var currentDir = dcim.EnumerateDirectories().FirstOrDefault(x => x.FullName.Contains($"{Path.DirectorySeparatorChar}{source}"))
+                ?? internalStorage.EnumerateDirectories()
+                    .First(x => x.FullName.Contains($"{Path.DirectorySeparatorChar}Pictures")).EnumerateDirectories()
+                    .FirstOrDefault(x => x.FullName.Contains($"{Path.DirectorySeparatorChar}{source}"))
+                ?? internalStorage.EnumerateDirectories()
+                    .First(x => x.FullName.Contains($"{Path.DirectorySeparatorChar}Pictures")).EnumerateDirectories()
+                    .First(x => x.FullName.Contains($"{Path.DirectorySeparatorChar}Gallery")).EnumerateDirectories()
+                    .First(x => x.FullName.Contains($"{Path.DirectorySeparatorChar}owner")).EnumerateDirectories()
+                    .FirstOrDefault(x => x.FullName.Contains($"{Path.DirectorySeparatorChar}{source}"));
+
+            if (currentDir == null)
+            {
+                logger.LogAndSendMessage($"Directory {source} does not exist!", progressCallback);
+                continue;
+            }
+
+            var missingFiles = currentDir.EnumerateFiles()
+                .Where(x => !existingFiles.ContainsKey(x.Name) && !x.Name.StartsWith('.')).ToList();
+            if (missingFiles.Count == 0)
+            {
+                var currentDirName = currentDir.FullName.Split(Path.DirectorySeparatorChar, StringSplitOptions.RemoveEmptyEntries).Skip(1);
+                logger.LogAndSendMessage($"No new files found in {string.Join(Path.DirectorySeparatorChar, currentDirName)}", progressCallback);
+                continue;
+            }
+
+            logger.LogAndSendMessage($"Found {missingFiles.Count} new files for {destination}...", progressCallback);
+
+            foreach (var file in missingFiles)
+            {
+                var sw1 = Stopwatch.StartNew();
+                var filePath = Path.Combine(destination, file.Name);
+
+                using var stream = file.OpenRead();
+                using var fileStream = File.Create(filePath);
+                stream.CopyTo(fileStream);
+
+                sw1.Stop();
+                var time = double.Parse(sw.ElapsedMilliseconds.ToString()) / 1000;
+                logger.LogAndSendMessage($"{time} - {filePath}", progressCallback);
+            }
+            count += missingFiles.Count;
+        }
+        sw.Stop();
+
+        var msg = $"Download of {count} files complete in {sw.Elapsed}.";
+        logger.LogAndSendMessage(msg, progressCallback);
+
+        device.Disconnect();
+        return string.Empty;
+    }
+
+    private static void LogAndSendMessage(this ILogger<Program> logger, string msg,  Func<string, Task> progressCallback)
+    {
+        logger.LogInformation(msg);
+        progressCallback($"{msg}").Wait();
+    }
+}
+

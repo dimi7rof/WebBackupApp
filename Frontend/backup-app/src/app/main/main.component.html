@@ -2,22 +2,43 @@
     <ul>
         <li 
         [ngClass]="{ 'active': selectedComponent === 'Phone' }" 
-        (click)="selectComponent('Phone')">Phone</li>
-    
+        (click)="selectComponent('Phone')">Phone</li>    
       <li 
         [ngClass]="{ 'active': selectedComponent === 'HDD' }" 
-        (click)="selectComponent('HDD')">HDD</li>
-    
+        (click)="selectComponent('HDD')">HDD</li>    
       <li 
         [ngClass]="{ 'active': selectedComponent === 'SdCard' }" 
-        (click)="selectComponent('SdCard')">SD Card</li>
-        
+        (click)="selectComponent('SdCard')">SDCard</li>        
       </ul>    
 </div>
-<div><p>{{selectedComponent}}</p></div>
 <div class="currentComponent">
     <!-- Dynamically load components using *ngIf -->
-    <app-phone *ngIf="selectedComponent === 'Phone'"></app-phone>
-    <app-hdd *ngIf="selectedComponent === 'HDD'"></app-hdd>
-    <app-sdcard *ngIf="selectedComponent === 'SdCard'"></app-sdcard>
+    <app-phone *ngIf="selectedComponent === 'Phone'"
+      [phoneData]="data?.phone"
+    ></app-phone>
+    <app-hdd *ngIf="selectedComponent === 'HDD'"
+      [data]="data?.hdd"
+    ></app-hdd>
+    <app-sd *ngIf="selectedComponent === 'SdCard'"
+      [data]="data?.sd"
+    ></app-sd>
   </div>
+
+  <div class="message">
+    {{ message }}
+  </div>
+
+  <div>
+    <button (click)="save()" class="save-btn">Save</button>
+  </div>
+
+  <div>
+    <button (click)="execute()" class="execute-btn">Execute</button>
+  </div>
+
+  <div *ngIf="progressData" id="progress">
+    <div *ngFor="let progress of progressData">
+      <p>{{ progress }}</p>
+    </div>
+  </div>
+  

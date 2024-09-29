@@ -1,0 +1,25 @@
+<p>HDD Component Loaded</p>
+<div id="pathsContainer" *ngIf="data; else noData">
+    <div class="input-row">
+        <!-- Device Letter Input -->
+        <label for="deviceLetter">Device Letter:</label>
+        <select id="deviceLetter" [(ngModel)]="data.deviceLetter">
+            <option value="D">D</option>
+            <option value="E">E</option>
+            <option value="F">F</option>
+            <option value="G">G</option>
+            <option value="H">H</option>
+          </select>
+      </div>
+
+    <div *ngFor="let source of data.paths.sourcePaths; let i = index" class="input-row">
+      <label [for]="'sourcePath' + i">Source {{ i + 1 }}:</label>
+      <input type="text" [id]="'sourcePath' + i" [name]="'sourcePath' + i" [value]="source" required>
+      <label [for]="'destinationPath' + i">Destination {{ i + 1 }}:</label>
+      <input type="text" [id]="'destinationPath' + i" [name]="'destinationPath' + i" [value]="data.paths.destinationPaths[i]" required>
+    </div>
+</div>
+
+<ng-template #noData>
+  <p>No data available to display.</p>
+</ng-template>
