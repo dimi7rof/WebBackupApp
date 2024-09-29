@@ -1,17 +1,20 @@
-﻿using NAudio.Wave;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
+using NAudio.Wave;
 using System.Diagnostics;
+using WebBackUp.Hubs;
 using WebBackUp.Models;
 
 namespace WebBackUp.Utilities;
 
 internal static class SdCard
 {
-    internal static string Execute(PathData pathData, ILogger<Program> logger)
+    internal static async Task Execute([FromBody] UserData userData, IHubContext<ProgressHub> hubContext)
     {
-        Func<string, Task> progressCallback = null;
         var totalFiles = 0;
         var deletedFiles = 0;
 
+        var pathData = userData.SD.Paths;
         var lists = pathData.SourcePaths
             .Select((source, i) => (source, Destination: pathData.DestinationPaths[i]));
 
@@ -20,31 +23,32 @@ internal static class SdCard
             .Select(x => (x.source, $"{lists.First().Destination}{x.Destination[1..]}"))
             .ToList();
 
-        logger.LogAndSendMessage($"Transfer started: {DateTime.Now}", progressCallback);
+        await hubContext.Clients.All.SendAsync("ReceiveProgress", $"Transfer started: {DateTime.Now}");
 
 
         var sw = Stopwatch.StartNew();
         foreach (var (source, destination) in realPathList)
         {
-            deletedFiles += DeleteFilesAndFolders(source, destination, progressCallback, logger);
-            totalFiles += CopyMissingItems(source, destination, progressCallback, logger);
+            deletedFiles += await DeleteFilesAndFolders(source, destination, hubContext);
+            totalFiles += await CopyMissingItems(source, destination, hubContext);
         }
 
         sw.Stop();
-        return $"Transfer of {totalFiles} files completed in {sw.Elapsed.Hours}h:{sw.Elapsed.Minutes}m:{sw.Elapsed.Seconds}s.";
+        await hubContext.Clients.All.SendAsync("ReceiveProgress", $"Transfer of {totalFiles} files completed in {sw.Elapsed.Hours}h:{sw.Elapsed.Minutes}m:{sw.Elapsed.Seconds}s.");
+        return;
     }
 
-    private static int CopyMissingItems(string sourcePath, string destinationPath, Func<string, Task> progressCallback, ILogger<Program> logger)
+    private static async Task<int> CopyMissingItems(string sourcePath, string destinationPath, IHubContext<ProgressHub> hubContext)
     {
         if (!Directory.Exists(sourcePath))
         {
-            logger.LogAndSendMessage($"Source directory '{sourcePath}' not found!", progressCallback);
+            await hubContext.Clients.All.SendAsync("ReceiveProgress", $"Source directory '{sourcePath}' not found!");
             return 0;
         }
 
         if (!Directory.Exists(destinationPath))
         {
-            logger.LogAndSendMessage($"Destination directory '{destinationPath}' not found!", progressCallback);
+            await hubContext.Clients.All.SendAsync("ReceiveProgress", $"Destination directory '{destinationPath}' not found!");
             return 0;
         }
 
@@ -58,7 +62,7 @@ internal static class SdCard
             .Where(sourceFile => !File.Exists(Path.Combine(destinationPath, GetRelativePath(sourcePath, sourceFile))));
 
         var fileCountString = missingFiles.Count() == 1 ? "file" : "files";
-        progressCallback($"{missingFiles.Count()} new {fileCountString} found.").Wait();
+        await hubContext.Clients.All.SendAsync("ReceiveProgress", $"{missingFiles.Count()} new {fileCountString} found.");
 
         foreach (var file in missingFiles)
         {
@@ -73,13 +77,13 @@ internal static class SdCard
                 var mp3 = mp3Reader.Mp3WaveFormat;
                 if (mp3.SampleRate < 44100)
                 {
-                    progressCallback($"[Warning] Low sample rate: {mp3.SampleRate}: '{destinationFile}'").Wait();
+                    await hubContext.Clients.All.SendAsync("ReceiveProgress", $"[Warning] Low sample rate: {mp3.SampleRate}: '{destinationFile}'");
                 }
 
                 var bitRate = mp3.AverageBytesPerSecond * 8 / 1000; 
                 if (bitRate < 128)
                 {
-                    progressCallback($"[Warning] Low bitrate: {bitRate}: '{destinationFile}'").Wait();
+                    await hubContext.Clients.All.SendAsync("ReceiveProgress", $"[Warning] Low bitrate: {bitRate}: '{destinationFile}'");
                 }
 
                 msg = $"{bitRate}kbps, {mp3.SampleRate}Hz, {mp3.Encoding}, {mp3.Channels} channels";
@@ -94,7 +98,7 @@ internal static class SdCard
 
                 sw.Stop();
                 var time = double.Parse(sw.ElapsedMilliseconds.ToString()) / 1000;
-                progressCallback($"{time}s - {msg} - {destinationFile}").Wait();
+                await hubContext.Clients.All.SendAsync("ReceiveProgress", $"{time}s - {msg} - {destinationFile}");
             }
             catch (Exception ex)
             {
@@ -104,7 +108,7 @@ internal static class SdCard
 
                 sw.Stop();
                 var time = double.Parse(sw.ElapsedMilliseconds.ToString()) / 1000;
-                progressCallback($"Failed: {time} - {msg} - {destinationFile},\n\t{ex.Message}").Wait();
+                await hubContext.Clients.All.SendAsync("ReceiveProgress", $"Failed: {time} - {msg} - {destinationFile},\n\t{ex.Message}");
             }
             
             fileCount++;
@@ -113,7 +117,7 @@ internal static class SdCard
         return fileCount;
     }
 
-    private static int DeleteFilesAndFolders(string sourcePath, string destinationPath, Func<string, Task> progressCallback, ILogger<Program> logger)
+    private static async Task<int> DeleteFilesAndFolders(string sourcePath, string destinationPath, IHubContext<ProgressHub> hubContext)
     {
         if (!Directory.Exists(sourcePath) || !Directory.Exists(destinationPath))
         {
@@ -126,14 +130,14 @@ internal static class SdCard
         var filesToDelete = Directory.GetFiles(destinationPath, "*", SearchOption.AllDirectories)
             .Where(destinationFile => !File.Exists(Path.Combine(sourcePath, GetRelativePath(destinationPath, destinationFile))));
 
-        DeleteFolders(dirsToDelete, progressCallback);
+        await DeleteFolders(dirsToDelete, hubContext);
 
-        var fileCount = DeleteFiles(filesToDelete, progressCallback);
+        var fileCount = await DeleteFiles(filesToDelete, hubContext);
 
         return fileCount;
     }
 
-    private static int DeleteFiles(IEnumerable<string> filesToDelete, Func<string, Task> progressCallback)
+    private static async Task<int> DeleteFiles(IEnumerable<string> filesToDelete, IHubContext<ProgressHub> hubContext)
     {
         var fileCount = 0;
         foreach (var file in filesToDelete)
@@ -146,19 +150,19 @@ internal static class SdCard
                 File.Delete(file);
 
                 sw.Stop();
-                progressCallback($"{sw.ElapsedMilliseconds} - {file} - Deleted");
+                await hubContext.Clients.All.SendAsync("ReceiveProgress", $"{sw.ElapsedMilliseconds} - {file} - Deleted");
                 fileCount++;
             }
             catch (Exception ex)
             {
-                progressCallback($"Cannot delete file: {file}, {ex.Message}").Wait();
+                await hubContext.Clients.All.SendAsync("ReceiveProgress", $"Cannot delete file: {file}, {ex.Message}");
             }
         }
 
         return fileCount;
     }
 
-    private static void DeleteFolders(IEnumerable<string> dirsToDelete, Func<string, Task> progressCallback)
+    private static async Task DeleteFolders(IEnumerable<string> dirsToDelete, IHubContext<ProgressHub> hubContext)
     {
         foreach (var folder in dirsToDelete)
         {
@@ -168,7 +172,7 @@ internal static class SdCard
             }
             catch (Exception ex)
             {
-                progressCallback($"Cannot delete folder {folder}, {ex.Message}").Wait();
+                await hubContext.Clients.All.SendAsync("ReceiveProgress", $"Cannot delete folder {folder}, {ex.Message}");
             }
         }
     }
@@ -177,12 +181,4 @@ internal static class SdCard
     {
         return Path.GetRelativePath(basePath, fullPath);
     }
-
-
-    private static void LogAndSendMessage(this ILogger<Program> logger, string msg, Func<string, Task> progressCallback)
-    {
-        logger.LogInformation(msg);
-        progressCallback($"{msg}").Wait();
-    }
-
 }

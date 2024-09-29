@@ -1,6 +1,9 @@
 ﻿using MediaDevices;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using System.Diagnostics;
 using System.Runtime.Versioning;
+using WebBackUp.Hubs;
 using WebBackUp.Models;
 
 namespace WebBackUp.Utilities;
@@ -8,16 +11,17 @@ namespace WebBackUp.Utilities;
 [SupportedOSPlatform("Windows")]
 internal static class Phone
 {
-    internal static string Execute(PathData pathData, ILogger<Program> logger)
+    internal static async Task Execute([FromBody] UserData userData, IHubContext<ProgressHub> hubContext)
     {
-        Func<string, Task> progressCallback = null;
+        
         var devices = MediaDevice.GetDevices().ToArray();
         if (devices.Length == 0)
         {
-            return "Device not found!";
+            await hubContext.Clients.All.SendAsync("ReceiveProgress", "Device not found!");
+            return;
         }
 
-        logger.LogAndSendMessage($"Found {devices.Length} device(s): {string.Join(", ", devices.Select(x => x.FriendlyName))}", progressCallback);
+        await hubContext.Clients.All.SendAsync("ReceiveProgress", $"Found {devices.Length} device(s): {string.Join(", ", devices.Select(x => x.FriendlyName))}");
 
         MediaDevice? device = null;
         if (devices.Length == 1)
@@ -30,7 +34,7 @@ internal static class Phone
                 || d.FriendlyName.Contains("xiaomi", StringComparison.CurrentCultureIgnoreCase)).First();
         }
 
-        logger.LogAndSendMessage($"Connected to the smartphone: {device.FriendlyName}", progressCallback);
+        await hubContext.Clients.All.SendAsync("ReceiveProgress", $"Connected to the smartphone: {device.FriendlyName}");
 
         var sw = Stopwatch.StartNew();
         device.Connect();
@@ -38,19 +42,22 @@ internal static class Phone
         var rootDirectory = device.GetRootDirectory();
         if (rootDirectory == null)
         {
-            return "Unable to get root directory!";
+            await hubContext.Clients.All.SendAsync("ReceiveProgress", "Unable to get root directory!");
+            return;
         }
 
         var internalStorage = rootDirectory.EnumerateDirectories().First();
         var dcim = internalStorage.EnumerateDirectories().First(x => x.FullName.Contains($"{Path.DirectorySeparatorChar}DCIM"));
 
         var count = 0;
+        var pathData = userData.Phone.Paths;
         var lists = pathData.SourcePaths.Select((x, i) => (x, pathData.DestinationPaths[i]));
+
         foreach (var (source, destination) in lists)
         {
             if (!Directory.Exists(destination))
             {
-                logger.LogAndSendMessage($"Creating folder: {destination}", progressCallback);
+                await hubContext.Clients.All.SendAsync("ReceiveProgress", $"Creating folder: {destination}");
                 Directory.CreateDirectory(destination);
             }
 
@@ -69,7 +76,7 @@ internal static class Phone
 
             if (currentDir == null)
             {
-                logger.LogAndSendMessage($"Directory {source} does not exist!", progressCallback);
+                await hubContext.Clients.All.SendAsync("ReceiveProgress", $"Directory {source} does not exist!");
                 continue;
             }
 
@@ -78,11 +85,11 @@ internal static class Phone
             if (missingFiles.Count == 0)
             {
                 var currentDirName = currentDir.FullName.Split(Path.DirectorySeparatorChar, StringSplitOptions.RemoveEmptyEntries).Skip(1);
-                logger.LogAndSendMessage($"No new files found in {string.Join(Path.DirectorySeparatorChar, currentDirName)}", progressCallback);
+                await hubContext.Clients.All.SendAsync("ReceiveProgress", $"No new files found in {string.Join(Path.DirectorySeparatorChar, currentDirName)}");
                 continue;
             }
 
-            logger.LogAndSendMessage($"Found {missingFiles.Count} new files for {destination}...", progressCallback);
+            await hubContext.Clients.All.SendAsync("ReceiveProgress", $"Found {missingFiles.Count} new files for {destination}...");
 
             foreach (var file in missingFiles)
             {
@@ -95,23 +102,17 @@ internal static class Phone
 
                 sw1.Stop();
                 var time = double.Parse(sw.ElapsedMilliseconds.ToString()) / 1000;
-                logger.LogAndSendMessage($"{time} - {filePath}", progressCallback);
+                await hubContext.Clients.All.SendAsync($"{time} - {filePath}");
             }
             count += missingFiles.Count;
         }
         sw.Stop();
 
         var msg = $"Download of {count} files complete in {sw.Elapsed}.";
-        logger.LogAndSendMessage(msg, progressCallback);
+        await hubContext.Clients.All.SendAsync("ReceiveProgress", msg);
 
         device.Disconnect();
-        return string.Empty;
-    }
-
-    private static void LogAndSendMessage(this ILogger<Program> logger, string msg,  Func<string, Task> progressCallback)
-    {
-        logger.LogInformation(msg);
-        progressCallback($"{msg}").Wait();
+        return;
     }
 }
 

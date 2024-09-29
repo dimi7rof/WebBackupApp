@@ -8,37 +8,39 @@ namespace WebBackUp.Utilities;
 
 internal static class Hdd
 {
-    internal static async Task Execute([FromBody]UserData userData, IHubContext<ProgressHub> hubContext, ILogger<Program> logger)
+    internal static async Task Execute([FromBody]UserData userData, IHubContext<ProgressHub> hubContext)
     {
-        var paths = userData.HDD.Paths;
         await hubContext.Clients.All.SendAsync("ReceiveProgress", "Begin backup...");
+
+        var paths = userData.HDD.Paths;
         var lists = paths.SourcePaths.Select((source, i) => (source, Destination: paths.DestinationPaths[i]));
         var letter = userData.HDD.DeviceLetter;
         var realPathList = lists.Select(x => (x.source, $"{letter}{x.Destination[1..]}")).ToList();
+
         await hubContext.Clients.All.SendAsync("ReceiveProgress", $"Backup of {realPathList.Count} directories started: {DateTime.Now}");
 
         var sw = Stopwatch.StartNew();
         foreach (var (source, destination) in realPathList)
         {
-            //CopyDirectoriesAndFiles(source, destination, logger);
+            await CopyDirectoriesAndFiles(source, destination, hubContext);
         }
 
         sw.Stop();
-        //logger.LogAndSendMessage($"Backup completed in {sw.Elapsed}.", progressCallback);
+        await hubContext.Clients.All.SendAsync("ReceiveProgress", $"Backup completed in {sw.Elapsed}.");
     }
 
-    private static void CopyDirectoriesAndFiles(string source, string destination, ILogger<Program> logger)
+    private static async Task CopyDirectoriesAndFiles(string source, string destination, IHubContext<ProgressHub> hubContext)
     {
         if (!Directory.Exists(source))
         {
-            //logger.LogAndSendMessage($"Source directory '{source}' not found!", progressCallback);
+            await hubContext.Clients.All.SendAsync("ReceiveProgress", $"Source directory '{source}' not found!");
             return;
         }
         var sourceDirs = Directory.GetDirectories(source);
 
         if (!Directory.Exists(destination))
         {
-            //logger.LogAndSendMessage($"Destination directory '{destination}' not found!", progressCallback);
+            await hubContext.Clients.All.SendAsync("ReceiveProgress", $"Destination directory '{destination}' not found!");
             return;
         }
         var destinationDirs = Directory.GetDirectories(destination);
@@ -68,7 +70,7 @@ internal static class Hdd
             }
 
             var file = missingFiles.Count == 1 ? "file" : "files";
-            //logger.LogAndSendMessage($"Found {missingFiles.Count} new {file}", progressCallback);
+            await hubContext.Clients.All.SendAsync("ReceiveProgress", $"Found {missingFiles.Count} new {file}");
 
             foreach (var sourceFilePath in missingFiles)
             {
@@ -80,21 +82,15 @@ internal static class Hdd
                     File.Copy(sourceFilePath, destinationFilePath);
 
                     sw.Stop();
-                    //logger.LogAndSendMessage($"{sw.ElapsedMilliseconds} - {destinationFilePath}", progressCallback);
+                    await hubContext.Clients.All.SendAsync("ReceiveProgress", $"{sw.ElapsedMilliseconds} - {destinationFilePath}");
                 }
                 catch (Exception ex)
                 {
-                    //logger.LogAndSendMessage($"Cannot copy file: {destinationFilePath}, {ex.Message}", progressCallback);
+                    await hubContext.Clients.All.SendAsync("ReceiveProgress", $"Cannot copy file: {destinationFilePath}, {ex.Message}");
                 }
             }
 
-            //CopyDirectoriesAndFiles(sourceDir, destinationDir, progressCallback, logger);
+            await CopyDirectoriesAndFiles(sourceDir, destinationDir, hubContext);
         }
-    }
-
-    private static void LogAndSendMessage(this ILogger<Program> logger, string msg, Func<string, Task> progressCallback)
-    {
-        logger.LogInformation(msg);
-        progressCallback($"{msg}").Wait();
     }
 }

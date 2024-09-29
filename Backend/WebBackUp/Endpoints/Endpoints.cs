@@ -20,66 +20,10 @@ internal static class Endpoints
         var filePath = GetFilePath(id);
         if (!File.Exists(filePath))
         {
-            Console.WriteLine($"UserData loaded {DateTime.Now}");
-            return Results.Ok(new UserData()
-            {
-                Phone = new PhoneData()
-                {
-                    Paths = new PathData()
-                    {
-                        SourcePaths =
-                                [
-                                    "Camera",
-                                    "Teo0",
-                                    "Teo1",
-                                    "TeOther",
-                                    "TeoVideo",
-                                    "Photoshop Express"
-                                ],
-                        DestinationPaths =
-                                [
-                                    "D:\\Android\\Mi14\\Camera",
-                                    "D:\\Android\\Mi14\\Teo0",
-                                    "D:\\Android\\Mi14\\Teo1",
-                                    "D:\\Android\\Mi14\\TeOther",
-                                    "D:\\Android\\Mi14\\TeoVideo",
-                                    "D:\\Android\\Common\\Photoshop_Express"
-                                ]
-                    }
-                },
-                HDD = new HddData()
-                {
-                    Paths = new PathData()
-                    {
-                        SourcePaths =
-                                [
-                                    "D:\\Android\\Mi14",
-                                    "D:\\Pictures\\Snimki\\Razhodki"
-                                ],
-                        DestinationPaths =
-                                [
-                                    "F:\\Snimki\\Mi14",
-                                    "F:\\Snimki\\Razhodki"
-                                ]
-                    }
-                },
-                SD = new SdData()
-                {
-                    Paths = new PathData()
-                    {
-                        SourcePaths =
-                                [
-                                    "D:\\Music\\Skoda"
-                                ],
-                        DestinationPaths =
-                                [
-                                    "F:\\Skoda"
-                                ]
-                    }
-                }
-            });
+            return Results.Ok(new UserData());
         }
 
+        Console.WriteLine($"UserData loaded {DateTime.Now}");
         var userData = JsonSerializer.Deserialize<UserData>(File.ReadAllText(filePath));
         var result = Results.Ok(userData);
         return result;
