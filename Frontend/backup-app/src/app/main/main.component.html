@@ -30,7 +30,7 @@
     <button (click)="execute()" class="execute-btn">Execute</button>
   </div>
 
-  <div>
+  <div class="progressContainer">
     <div *ngIf="progressData" id="progress">
       <span *ngFor="let progress of progressData">
         <p>{{ progress }}</p>

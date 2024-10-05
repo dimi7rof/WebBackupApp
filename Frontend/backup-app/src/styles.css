@@ -1,6 +1,10 @@
 /* Global Styles */
+html {
+    display: flex;
+    justify-content: center;
+    background-color: black;
+}
 body {
-    margin: 0px;
     font-family:  "Courier New", monospace;
     font-size: small;
 }
@@ -30,6 +34,7 @@ label {
 /* Navigation List (ul and li) */
 ul {
     width: 90vw;
+    max-width: 1000px;
     height: 75px;
     list-style: none;            /* Remove default bullet points */
     padding: 0px 25px;
@@ -39,6 +44,7 @@ ul {
 
 li {
     width: 90px;                 /* Set width of each box */
+    max-width: 1000px;
     height: 75px;                /* Set height of each box */
     background-color: #333;      /* Dark gray background */
     color: white;                /* White text color for contrast */
@@ -69,16 +75,22 @@ li:active {
     padding: 20px;
     border: 2px solid #ccc;
     border-radius: 10px;
-    background-image: linear-gradient(0deg, #cfcfcf, #ffffff);
+    background-image: linear-gradient(0deg, #cfcfcf, #e6e6e6);
     margin: 20px auto;
     width: 70vw;
+    max-width: 800px;
     max-height: 30vh;
     display: list-item;
     overflow-y: auto;
 }
 
+.progressContainer {
+    background-image: linear-gradient(0deg, #585858, #dddddd);
+}
+
 #progress {
     width: 70vw;
+    max-width: 800px;
     height: 25vh;
     display: list-item;
     overflow-y: auto;
