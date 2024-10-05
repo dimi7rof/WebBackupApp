@@ -1,1 +1,188 @@
-/* You can add global styles to this file, and also import other style files */
+/* Global Styles */
+body {
+    margin: 0px;
+    font-family:  "Courier New", monospace;
+    font-size: small;
+}
+
+div {
+    display: flex;
+    justify-content: center;
+    margin: 8px;
+    border: 1px solid rgb(109, 109, 109);
+    border-radius: 8px;
+}
+
+p {
+    color: #414141;
+    line-height: 0.3;
+}
+
+input {
+    width: 250px;
+}
+
+label {
+    margin-right: 10px;
+    font-weight: bold;
+}
+
+/* Navigation List (ul and li) */
+ul {
+    width: 90vw;
+    height: 75px;
+    list-style: none;            /* Remove default bullet points */
+    padding: 0px 25px;
+    display: flex;               /* Make the list horizontal */
+    justify-content: space-around;  /* Evenly space the items horizontally */
+}
+
+li {
+    width: 90px;                 /* Set width of each box */
+    height: 75px;                /* Set height of each box */
+    background-color: #333;      /* Dark gray background */
+    color: white;                /* White text color for contrast */
+    display: flex;               /* Use flex to center content */
+    align-items: center;         /* Center items vertically */
+    justify-content: center;     /* Center items horizontally */
+    border-radius: 5px;          /* Slightly rounded corners */
+    cursor: pointer;             /* Make items clickable */
+    transition: background-color 0.3s, color 0.3s;  /* Smooth hover effect */
+}
+
+/* List Item Hover and Active States */
+li:hover {
+    background-color: #555;      /* Lighter gray on hover */
+}
+
+li.active {                      /* Style for active (clicked) state */
+    background-color: rgb(64, 134, 167);  /* Blue background when clicked */
+    color: #333;                 /* Change text color to dark gray */
+}
+
+li:active {
+    background-color: #222;      /* Darker gray when clicked (temporary) */
+}
+
+/* Component and Path Containers */
+#pathsContainer {
+    padding: 20px;
+    border: 2px solid #ccc;
+    border-radius: 10px;
+    background-image: linear-gradient(0deg, #cfcfcf, #ffffff);
+    margin: 20px auto;
+    width: 70vw;
+    max-height: 30vh;
+    display: list-item;
+    overflow-y: auto;
+}
+
+#progress {
+    width: 70vw;
+    height: 25vh;
+    display: list-item;
+    overflow-y: auto;
+    padding: 20px;
+    border: 2px solid #ccc;
+    border-radius: 10px;
+    background-image: linear-gradient(0deg, #a1a1a1, #ffffff);
+    margin: 20px auto;
+}
+
+/* Input Row Styling */
+.input-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 15px;
+}
+
+.styled-input {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    width: 250px;
+    font-size: 14px;
+}
+
+/* Dropdown (Select) Styling */
+.styled-select {
+    padding: 5px;
+    font-size: 16px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    background-color: #fff;
+}
+
+/* Checkbox Styling */
+.checkbox-label {
+    margin-right: 10px;
+    font-size: 16px;
+    color: #333;
+}
+
+.styled-checkbox {
+    width: 18px;
+    height: 18px;
+}
+
+input[type="checkbox"]:checked + .checkbox-label {
+    color: #008000;
+}
+
+/* Buttons */
+.buttons {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    background-image: linear-gradient(180deg, #585858, #dddddd);
+}
+
+.execute-btn, .save-btn {
+    border: none;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 4px;
+    margin: 10px;
+}
+
+.execute-btn {
+    background-color: #007bff;
+    color: white;
+}
+
+.execute-btn:hover {
+    background-color: #0056b3;
+}
+
+.save-btn {
+    background-color: #1e9700;
+    color: white;
+}
+
+.save-btn:hover {
+    background-color: #177400;
+}
+
+/* Miscellaneous */
+#destination {
+    margin-left: 50px;
+}
+
+.type {
+    margin-top: 8px;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: medium;
+    font-weight: 600;
+    background-image: linear-gradient(180deg, #585858, #dddddd);
+}
+
+.currentComponent {
+    background-color: #7e7e7e;
+    padding: 10px;
+}
+
+#main {
+    background-color: #414141;
+}

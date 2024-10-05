@@ -28,8 +28,17 @@ export class UserDataService {
   }
 
   execute(data: any, component: string) {
-    this.http.post(`http://localhost:5000/execute/${component}`, data, {
-      headers: new HttpHeaders({ 'Content-Type': 'application/json' })
+    // Clean up the source and destination paths by removing any empty values
+    const cleanedData = { ...data };
+    
+    if (cleanedData.paths) {
+      cleanedData.paths.sourcePaths = cleanedData.paths.sourcePaths.filter((path: string) => path.trim() !== '');
+      cleanedData.paths.destinationPaths = cleanedData.paths.destinationPaths.filter((path: string) => path.trim() !== '');
+    }
+
+    // Proceed with the cleaned data
+    this.http.post(`http://localhost:5000/execute/${component}`, cleanedData, {
+      headers: new HttpHeaders({ 'Content-Type': 'application/json' }),
     }).subscribe({
       next: (response) => {
         console.log('Post request successful. Response:', response);
@@ -39,28 +48,29 @@ export class UserDataService {
       },
       complete: () => {
         console.log('Post request completed.');
-      }
+      },
     });
   }
 
-  save(data: any, id: string): string {
+  save(data: UserData, id: string): string {
     let message = '';
-    this.http.post<{ Message: string }>(`http://localhost:5000/saveuserdata/${id}`, data, {
-      headers: new HttpHeaders({ 'Content-Type': 'application/json' })
+    this.http.post<{ message: string }>(`http://localhost:5000/saveuserdata/${id}`,
+       data, {
+      headers: new HttpHeaders({ 'Content-Type': 'application/json' }),
     }).subscribe({
       next: (response) => {
         console.log('Post request successful. Response:', response);
-        message = response.Message;
+        alert(response.message);
       },
       error: (err) => {
         console.error('Error executing request:', err);
       },
       complete: () => {
         console.log('Post request completed.');
-      }
+      },
     });
 
-    return message
+    return message;
   }
 
   clearCache() {
@@ -68,4 +78,3 @@ export class UserDataService {
   }
 }
 export { UserData };
-

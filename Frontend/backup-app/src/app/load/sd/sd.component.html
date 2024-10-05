@@ -1,11 +1,26 @@
-<p>SD Component Loaded</p>
 <div id="pathsContainer" *ngIf="data; else noData">
-    <div *ngFor="let source of data.paths.sourcePaths; let i = index" class="input-row">
+  <span class="input-row">
+      <!-- Device Letter Input -->
+      <label for="deviceLetter">Device Letter:</label>
+      <select id="deviceLetter" [(ngModel)]="data.deviceLetter">
+          <option value="D">D</option>
+          <option value="E">E</option>
+          <option value="F">F</option>
+          <option value="G">G</option>
+          <option value="H">H</option>
+        </select>
+        
+        <!-- Synchronize Checkbox -->
+        <label for="syncData" class="checkbox-label">Synchronize Data</label>
+        <input type="checkbox" id="syncData" [(ngModel)]="data.sync" class="styled-checkbox">
+    </span>
+
+    <span *ngFor="let source of data.paths.sourcePaths; let i = index" class="input-row">
       <label [for]="'sourcePath' + i">Source {{ i + 1 }}:</label>
       <input type="text" [id]="'sourcePath' + i" [name]="'sourcePath' + i" [value]="source" required>
-      <label [for]="'destinationPath' + i">Destination {{ i + 1 }}:</label>
+      <label id="destination" [for]="'destinationPath' + i">Destination {{ i + 1 }}:</label>
       <input type="text" [id]="'destinationPath' + i" [name]="'destinationPath' + i" [value]="data.paths.destinationPaths[i]" required>
-    </div>
+    </span>
 </div>
 
 <ng-template #noData>

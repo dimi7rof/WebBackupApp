@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
 import { HDD } from '../../../models/userData';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';

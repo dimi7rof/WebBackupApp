@@ -12,6 +12,7 @@ export interface PathData {
   export interface SD {
     paths: PathData;
     deviceLetter: string;
+    sync: boolean;
   }
   export interface UserData {
     phone: Phone;

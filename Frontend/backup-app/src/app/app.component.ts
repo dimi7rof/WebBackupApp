@@ -7,7 +7,6 @@ import { MainComponent } from './main/main.component';
   standalone: true,
   imports: [RouterOutlet, MainComponent],
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css'] // Corrected "styleUrls" (plural)
 })
 export class AppComponent {
   title = 'backup-app';

@@ -1,4 +1,4 @@
-<div>
+<div class="type">
     <ul>
         <li 
         [ngClass]="{ 'active': selectedComponent === 'Phone' }" 
@@ -11,6 +11,7 @@
         (click)="selectComponent('SdCard')">SDCard</li>        
       </ul>    
 </div>
+
 <div class="currentComponent">
     <!-- Dynamically load components using *ngIf -->
     <app-phone *ngIf="selectedComponent === 'Phone'"
@@ -23,22 +24,18 @@
       [data]="data?.sd"
     ></app-sd>
   </div>
-
-  <div class="message">
-    {{ message }}
-  </div>
-
-  <div>
+  
+  <div class="buttons">
     <button (click)="save()" class="save-btn">Save</button>
-  </div>
-
-  <div>
     <button (click)="execute()" class="execute-btn">Execute</button>
   </div>
 
-  <div *ngIf="progressData" id="progress">
-    <div *ngFor="let progress of progressData">
-      <p>{{ progress }}</p>
+  <div>
+    <div *ngIf="progressData" id="progress">
+      <span *ngFor="let progress of progressData">
+        <p>{{ progress }}</p>
+      </span>
     </div>
   </div>
+  
   
