@@ -14,8 +14,10 @@ internal static class Hdd
 
         var paths = userData.HDD.Paths;
         var lists = paths.SourcePaths.Select((source, i) => (source, Destination: paths.DestinationPaths[i]));
-        var letter = userData.HDD.DeviceLetter;
-        var realPathList = lists.Select(x => (x.source, $"{letter}{x.Destination[1..]}")).ToList();
+        var realPathList = lists
+            .Where(x => !string.IsNullOrEmpty(x.source) && !string.IsNullOrEmpty(x.Destination))
+            .Select(x => (x.source, $"{userData.HDD.DeviceLetter}{x.Destination[1..]}"))
+            .ToList();
 
         await hubContext.Clients.All.SendAsync("ReceiveProgress", $"Backup of {realPathList.Count} directories started: {DateTime.Now}");
 
@@ -26,7 +28,7 @@ internal static class Hdd
         }
 
         sw.Stop();
-        await hubContext.Clients.All.SendAsync("ReceiveProgress", $"Backup completed in {sw.Elapsed}.");
+        await hubContext.Clients.All.SendAsync("ReceiveProgress", $"Backup completed in {sw.Elapsed.Hours}h:{sw.Elapsed.Minutes}m:{sw.Elapsed.Seconds}s.");
     }
 
     private static async Task CopyDirectoriesAndFiles(string source, string destination, IHubContext<ProgressHub> hubContext)
@@ -82,7 +84,8 @@ internal static class Hdd
                     File.Copy(sourceFilePath, destinationFilePath);
 
                     sw.Stop();
-                    await hubContext.Clients.All.SendAsync("ReceiveProgress", $"{sw.ElapsedMilliseconds} - {destinationFilePath}");
+                    var time = double.Parse(sw.ElapsedMilliseconds.ToString()) / 1000;
+                    await hubContext.Clients.All.SendAsync("ReceiveProgress", $"{time}s - {destinationFilePath}");
                 }
                 catch (Exception ex)
                 {

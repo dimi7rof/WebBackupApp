@@ -20,9 +20,6 @@ var app = builder.Build();
 
 app.UseCors("AllowAngularApp");
 
-app.UseDefaultFiles();
-app.UseStaticFiles();
-
 app.Map();
 
 app.MapHub<ProgressHub>("/progressHub");

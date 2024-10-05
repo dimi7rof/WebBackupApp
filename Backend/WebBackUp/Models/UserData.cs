@@ -17,6 +17,7 @@ internal class HddData : BaseUserData
 internal class SdData : BaseUserData
 {
     public string DeviceLetter { get; set; } = "F";
+    public bool Sync { get; set; } = false;
 }
 
 internal class BaseUserData

@@ -19,17 +19,20 @@ internal static class SdCard
             .Select((source, i) => (source, Destination: pathData.DestinationPaths[i]));
 
         var realPathList = lists
-            .Skip(1)
-            .Select(x => (x.source, $"{lists.First().Destination}{x.Destination[1..]}"))
+            .Where(x => !string.IsNullOrEmpty(x.source) && !string.IsNullOrEmpty(x.Destination))
+            .Select(x => (x.source, $"{userData.SD.DeviceLetter}{x.Destination[1..]}"))
             .ToList();
 
         await hubContext.Clients.All.SendAsync("ReceiveProgress", $"Transfer started: {DateTime.Now}");
 
-
         var sw = Stopwatch.StartNew();
         foreach (var (source, destination) in realPathList)
         {
-            deletedFiles += await DeleteFilesAndFolders(source, destination, hubContext);
+            if (userData.SD.Sync)
+            {
+                deletedFiles += await DeleteFilesAndFolders(source, destination, hubContext);
+            }
+
             totalFiles += await CopyMissingItems(source, destination, hubContext);
         }
 
@@ -80,7 +83,7 @@ internal static class SdCard
                     await hubContext.Clients.All.SendAsync("ReceiveProgress", $"[Warning] Low sample rate: {mp3.SampleRate}: '{destinationFile}'");
                 }
 
-                var bitRate = mp3.AverageBytesPerSecond * 8 / 1000; 
+                var bitRate = mp3.AverageBytesPerSecond * 8 / 1000;
                 if (bitRate < 128)
                 {
                     await hubContext.Clients.All.SendAsync("ReceiveProgress", $"[Warning] Low bitrate: {bitRate}: '{destinationFile}'");
@@ -110,7 +113,7 @@ internal static class SdCard
                 var time = double.Parse(sw.ElapsedMilliseconds.ToString()) / 1000;
                 await hubContext.Clients.All.SendAsync("ReceiveProgress", $"Failed: {time} - {msg} - {destinationFile},\n\t{ex.Message}");
             }
-            
+
             fileCount++;
         }
 

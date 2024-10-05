@@ -34,10 +34,18 @@ internal static class Phone
                 || d.FriendlyName.Contains("xiaomi", StringComparison.CurrentCultureIgnoreCase)).First();
         }
 
-        await hubContext.Clients.All.SendAsync("ReceiveProgress", $"Connected to the smartphone: {device.FriendlyName}");
-
         var sw = Stopwatch.StartNew();
-        device.Connect();
+        try
+        {
+            device.Connect();
+        }
+        catch (Exception ex)
+        {
+            await hubContext.Clients.All.SendAsync("ReceiveProgress", $"Unable to get connect to device: {device.FriendlyName}! {ex.Message}");
+            return;
+        }
+
+        await hubContext.Clients.All.SendAsync("ReceiveProgress", $"Connected to the smartphone: {device.FriendlyName}");
 
         var rootDirectory = device.GetRootDirectory();
         if (rootDirectory == null)
@@ -51,7 +59,10 @@ internal static class Phone
 
         var count = 0;
         var pathData = userData.Phone.Paths;
-        var lists = pathData.SourcePaths.Select((x, i) => (x, pathData.DestinationPaths[i]));
+        var lists = pathData.SourcePaths
+            .Select((source, i) => (source, Destination: pathData.DestinationPaths[i]))
+            .Where(x => !string.IsNullOrEmpty(x.source) && !string.IsNullOrEmpty(x.Destination))
+            .ToList();
 
         foreach (var (source, destination) in lists)
         {
@@ -102,13 +113,13 @@ internal static class Phone
 
                 sw1.Stop();
                 var time = double.Parse(sw.ElapsedMilliseconds.ToString()) / 1000;
-                await hubContext.Clients.All.SendAsync($"{time} - {filePath}");
+                await hubContext.Clients.All.SendAsync("ReceiveProgress", $"{time}s - {filePath}");
             }
             count += missingFiles.Count;
         }
         sw.Stop();
 
-        var msg = $"Download of {count} files complete in {sw.Elapsed}.";
+        var msg = $"Download of {count} files complete in {sw.Elapsed.Hours}h:{sw.Elapsed.Minutes}m:{sw.Elapsed.Seconds}s.";
         await hubContext.Clients.All.SendAsync("ReceiveProgress", msg);
 
         device.Disconnect();
