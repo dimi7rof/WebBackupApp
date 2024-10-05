@@ -36,19 +36,19 @@ internal static class Endpoints
 
     internal static IResult LoadUserData(string id)
     {
+        Console.WriteLine($"Loading UserData for id:'{id}' {DateTime.Now}");
         var filePath = GetFilePath(id);
         if (!File.Exists(filePath))
         {
             return Results.Ok(new UserData());
         }
 
-        Console.WriteLine($"UserData loaded {DateTime.Now}");
         var userData = JsonSerializer.Deserialize<UserData>(File.ReadAllText(filePath));
         var result = Results.Ok(userData);
         return result;
     }
 
-    private static string GetFilePath(string setId) => Path.Combine("json", $"{setId}.json");
+    private static string GetFilePath(string setId) => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "json", $"{setId}.json");
 
     private static PathData FilterPaths(this PathData paths)
         => new()

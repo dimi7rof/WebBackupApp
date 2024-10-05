@@ -2,11 +2,10 @@
 
 namespace WebBackUp.Hubs;
 
-internal class ProgressHub(ILogger<Program> logger) : Hub
+internal class ProgressHub() : Hub
 {
     internal async Task SendProgressUpdate(string message)
     {
         await Clients.All.SendAsync("ReceiveProgress", message);
-        logger.LogInformation(message);
     }
 }
