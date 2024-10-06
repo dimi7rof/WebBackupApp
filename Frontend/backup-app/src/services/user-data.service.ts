@@ -52,26 +52,35 @@ export class UserDataService {
     });
   }
 
-  save(data: UserData, id: string): string {
-    let message = '';
-    this.http.post<{ message: string }>(`http://localhost:5000/saveuserdata/${id}`,
-       data, {
-      headers: new HttpHeaders({ 'Content-Type': 'application/json' }),
-    }).subscribe({
-      next: (response) => {
-        console.log('Post request successful. Response:', response);
-        alert(response.message);
-      },
-      error: (err) => {
-        console.error('Error executing request:', err);
-      },
-      complete: () => {
+  save(data: UserData, id: string): void {
+    const url = `http://localhost:5000/saveuserdata/${id}`;
+    const headers = {
+      'Content-Type': 'application/json',
+    };
+  
+    fetch(url, {
+      method: 'POST',
+      headers: headers,
+      body: JSON.stringify(data),
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        return response.json(); // Parse the JSON response
+      })
+      .then((responseData) => {
+        console.log('Post request successful. Response:', responseData);
+        alert(responseData.message);
+      })
+      .catch((error) => {
+        console.error('Error executing request:', error);
+      })
+      .finally(() => {
         console.log('Post request completed.');
-      },
-    });
-
-    return message;
+      });
   }
+  
 
   clearCache() {
     this.userData = undefined;
