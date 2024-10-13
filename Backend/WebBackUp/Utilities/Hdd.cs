@@ -68,7 +68,7 @@ internal static class Hdd
 
             if (missingFiles.Count == 0)
             {
-                return;
+                continue;
             }
 
             var file = missingFiles.Count == 1 ? "file" : "files";

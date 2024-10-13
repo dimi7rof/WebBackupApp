@@ -2,7 +2,7 @@
 
 namespace WebBackUp.Hubs;
 
-internal class ProgressHub() : Hub
+internal class ProgressHub : Hub
 {
     internal async Task SendProgressUpdate(string message)
     {
