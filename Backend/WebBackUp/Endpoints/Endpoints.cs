@@ -48,7 +48,8 @@ internal static class Endpoints
         return result;
     }
 
-    private static string GetFilePath(string setId) => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "json", $"{setId}.json");
+    private static string GetFilePath(string setId)
+        => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "json", $"{setId}.json");
 
     private static PathData FilterPaths(this PathData paths)
         => new()

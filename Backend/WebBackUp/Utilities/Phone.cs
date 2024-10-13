@@ -21,7 +21,8 @@ internal static class Phone
             return;
         }
 
-        await hubContext.Clients.All.SendAsync("ReceiveProgress", $"Found {devices.Length} device(s): {string.Join(", ", devices.Select(x => x.FriendlyName))}");
+        await hubContext.Clients.All.SendAsync("ReceiveProgress",
+            $"Found {devices.Length} device(s): {string.Join(", ", devices.Select(x => x.FriendlyName))}");
 
         MediaDevice? device = null;
         if (devices.Length == 1)
@@ -41,11 +42,13 @@ internal static class Phone
         }
         catch (Exception ex)
         {
-            await hubContext.Clients.All.SendAsync("ReceiveProgress", $"Unable to get connect to device: {device.FriendlyName}! {ex.Message}");
+            await hubContext.Clients.All.SendAsync("ReceiveProgress",
+                $"Unable to connect to device: {device.FriendlyName}! {ex.Message}");
             return;
         }
 
-        await hubContext.Clients.All.SendAsync("ReceiveProgress", $"Connected to the smartphone: {device.FriendlyName}");
+        await hubContext.Clients.All.SendAsync("ReceiveProgress",
+            $"Connected to the smartphone: {device.FriendlyName}");
 
         var rootDirectory = device.GetRootDirectory();
         if (rootDirectory == null)
@@ -55,7 +58,8 @@ internal static class Phone
         }
 
         var internalStorage = rootDirectory.EnumerateDirectories().First();
-        var dcim = internalStorage.EnumerateDirectories().First(x => x.FullName.Contains($"{Path.DirectorySeparatorChar}DCIM"));
+        var dcim = internalStorage.EnumerateDirectories()
+            .First(x => x.FullName.Contains($"{Path.DirectorySeparatorChar}DCIM"));
 
         var count = 0;
         var pathData = userData.Phone.Paths;
@@ -85,23 +89,27 @@ internal static class Phone
         return;
     }
 
-    private static async Task CopyToPhone(MediaDevice device, string source, string destination, MediaDirectoryInfo internalStorage, IHubContext<ProgressHub> hubContext)
+    private static async Task CopyToPhone(MediaDevice device, string source, string destination,
+        MediaDirectoryInfo internalStorage, IHubContext<ProgressHub> hubContext)
     {
         var sw = Stopwatch.StartNew();
         var download = @"Internal shared storage\Download"; ;
         if (!device.DirectoryExists(download))
         {
             internalStorage.CreateSubdirectory("Download");
-            await hubContext.Clients.All.SendAsync("ReceiveProgress", $"Directory {download} created successfully.");
+            await hubContext.Clients.All.SendAsync("ReceiveProgress",
+                $"Directory {download} created successfully.");
         }
 
         var destinationPath = $"{download}\\{destination}";
 
-        var downloadDir = internalStorage.EnumerateDirectories().First(x => x.FullName.Contains("Download"));
+        var downloadDir = internalStorage.EnumerateDirectories()
+            .First(x => x.FullName.Contains("Download"));
         if (!device.DirectoryExists(destinationPath))
         {
             downloadDir.CreateSubdirectory(destination);
-            await hubContext.Clients.All.SendAsync("ReceiveProgress", $"Directory {destinationPath} created successfully.");
+            await hubContext.Clients.All.SendAsync("ReceiveProgress",
+                $"Directory {destinationPath} created successfully.");
         }
 
         var count = 0;
@@ -137,7 +145,8 @@ internal static class Phone
         await hubContext.Clients.All.SendAsync("ReceiveProgress", msg);
     }
 
-    private static async Task CopyToPc(string source, string destination, MediaDirectoryInfo internalStorage, MediaDirectoryInfo dcim, IHubContext<ProgressHub> hubContext, int count)
+    private static async Task CopyToPc(string source, string destination, MediaDirectoryInfo internalStorage,
+        MediaDirectoryInfo dcim, IHubContext<ProgressHub> hubContext, int count)
     {
         if (!Directory.Exists(destination))
         {
@@ -148,7 +157,8 @@ internal static class Phone
         var existingFiles = Directory.GetFiles(destination)
             .ToDictionary(x => x.Split(Path.DirectorySeparatorChar).Last(), x => x);
 
-        var currentDir = dcim.EnumerateDirectories().FirstOrDefault(x => x.FullName.Contains($"{Path.DirectorySeparatorChar}{source}"))
+        var currentDir = dcim.EnumerateDirectories()
+            .FirstOrDefault(x => x.FullName.Contains($"{Path.DirectorySeparatorChar}{source}"))
             ?? internalStorage.EnumerateDirectories()
                 .First(x => x.FullName.Contains($"{Path.DirectorySeparatorChar}Pictures")).EnumerateDirectories()
                 .FirstOrDefault(x => x.FullName.Contains($"{Path.DirectorySeparatorChar}{source}"))
@@ -169,18 +179,23 @@ internal static class Phone
 
         if (missingFiles.Count == 0)
         {
-            var currentDirName = currentDir.FullName.Split(Path.DirectorySeparatorChar, StringSplitOptions.RemoveEmptyEntries).Skip(1);
-            await hubContext.Clients.All.SendAsync("ReceiveProgress", $"No new files found in {string.Join(Path.DirectorySeparatorChar, currentDirName)}");
+            var currentDirName = currentDir.FullName
+                .Split(Path.DirectorySeparatorChar, StringSplitOptions.RemoveEmptyEntries)
+                .Skip(1);
+            await hubContext.Clients.All.SendAsync("ReceiveProgress",
+                $"No new files found in {string.Join(Path.DirectorySeparatorChar, currentDirName)}");
             return;
         }
 
-        await hubContext.Clients.All.SendAsync("ReceiveProgress", $"Found {missingFiles.Count} new files for {destination}...");
+        await hubContext.Clients.All.SendAsync("ReceiveProgress",
+            $"Found {missingFiles.Count} new files for {destination}...");
 
         await CopyFiles(missingFiles, destination, hubContext);
         count += missingFiles.Count;
     }
 
-    private static async Task CopyFiles(List<MediaFileInfo> missingFiles, string destination, IHubContext<ProgressHub> hubContext)
+    private static async Task CopyFiles(List<MediaFileInfo> missingFiles, string destination,
+        IHubContext<ProgressHub> hubContext)
     {
         foreach (var file in missingFiles)
         {
