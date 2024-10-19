@@ -9,7 +9,7 @@ namespace WebBackUp.Utilities;
 
 internal static class SdCard
 {
-    internal static async Task Execute([FromBody] UserData userData, IHubContext<ProgressHub> hubContext)
+    internal static async Task Execute([FromBody] UserData userData, IHubContext<ProgressHub, IBackupProgress> hubContext)
     {
         var totalFiles = 0;
         var deletedFiles = 0;
@@ -23,7 +23,7 @@ internal static class SdCard
             .Select(x => (x.source, $"{userData.SD.DeviceLetter}{x.Destination[1..]}"))
             .ToList();
 
-        await hubContext.Clients.All.SendAsync("ReceiveProgress", $"Transfer started: {DateTime.Now}");
+        await hubContext.Clients.All.ReceiveProgress($"Transfer started: {DateTime.Now}");
 
         var sw = Stopwatch.StartNew();
         foreach (var (source, destination) in realPathList)
@@ -37,25 +37,23 @@ internal static class SdCard
         }
 
         sw.Stop();
-        await hubContext.Clients.All.SendAsync("ReceiveProgress",
+        await hubContext.Clients.All.ReceiveProgress(
             $"Transfer of {totalFiles} files completed in {sw.Elapsed.Hours}h:{sw.Elapsed.Minutes}m:{sw.Elapsed.Seconds}s.");
         return;
     }
 
     private static async Task<int> CopyMissingItems(string sourcePath, string destinationPath,
-        IHubContext<ProgressHub> hubContext)
+        IHubContext<ProgressHub, IBackupProgress> hubContext)
     {
         if (!Directory.Exists(sourcePath))
         {
-            await hubContext.Clients.All.SendAsync("ReceiveProgress",
-                $"Source directory '{sourcePath}' not found!");
+            await hubContext.Clients.All.ReceiveProgress($"Source directory '{sourcePath}' not found!");
             return 0;
         }
 
         if (!Directory.Exists(destinationPath))
         {
-            await hubContext.Clients.All.SendAsync("ReceiveProgress",
-                $"Destination directory '{destinationPath}' not found!");
+            await hubContext.Clients.All.ReceiveProgress($"Destination directory '{destinationPath}' not found!");
             return 0;
         }
 
@@ -69,7 +67,7 @@ internal static class SdCard
             .Where(sourceFile => !File.Exists(Path.Combine(destinationPath, GetRelativePath(sourcePath, sourceFile))));
 
         var fileCountString = missingFiles.Count() == 1 ? "file" : "files";
-        await hubContext.Clients.All.SendAsync("ReceiveProgress", $"{missingFiles.Count()} new {fileCountString} found.");
+        await hubContext.Clients.All.ReceiveProgress($"{missingFiles.Count()} new {fileCountString} found.");
 
         foreach (var sourceFilePath in missingFiles)
         {
@@ -84,15 +82,13 @@ internal static class SdCard
                 var mp3 = mp3Reader.Mp3WaveFormat;
                 if (mp3.SampleRate < 44100)
                 {
-                    await hubContext.Clients.All.SendAsync("ReceiveProgress",
-                        $"[Warning] Low sample rate: {mp3.SampleRate}: '{destinationFilePath}'");
+                    await hubContext.Clients.All.ReceiveProgress($"[Warning] Low sample rate: {mp3.SampleRate}: '{destinationFilePath}'");
                 }
 
                 var bitRate = mp3.AverageBytesPerSecond * 8 / 1000;
                 if (bitRate < 128)
                 {
-                    await hubContext.Clients.All.SendAsync("ReceiveProgress",
-                        $"[Warning] Low bitrate: {bitRate}: '{destinationFilePath}'");
+                    await hubContext.Clients.All.ReceiveProgress($"[Warning] Low bitrate: {bitRate}: '{destinationFilePath}'");
                 }
 
                 msg = $"{bitRate}kbps | {mp3.SampleRate}Hz | {mp3.Encoding} | {mp3.Channels} channels";
@@ -108,8 +104,7 @@ internal static class SdCard
 
                 sw.Stop();
                 var time = double.Parse(sw.ElapsedMilliseconds.ToString()) / 1000;
-                await hubContext.Clients.All.SendAsync("ReceiveProgress",
-                    $"{time}s - {msg} - {destinationFilePath}");
+                await hubContext.Clients.All.ReceiveProgress($"{time}s - {msg} - {destinationFilePath}");
             }
             catch (Exception ex)
             {
@@ -119,8 +114,7 @@ internal static class SdCard
 
                 sw.Stop();
                 var time = double.Parse(sw.ElapsedMilliseconds.ToString()) / 1000;
-                await hubContext.Clients.All.SendAsync("ReceiveProgress",
-                    $"Failed: {time} - {msg} - {destinationFilePath},\n\t{ex.Message}");
+                await hubContext.Clients.All.ReceiveProgress($"Failed: {time} - {msg} - {destinationFilePath},\n\t{ex.Message}");
             }
 
             fileCount++;
@@ -130,7 +124,7 @@ internal static class SdCard
     }
 
     private static async Task<int> DeleteFilesAndFolders(string sourcePath,
-        string destinationPath, IHubContext<ProgressHub> hubContext)
+        string destinationPath, IHubContext<ProgressHub, IBackupProgress> hubContext)
     {
         if (!Directory.Exists(sourcePath) || !Directory.Exists(destinationPath))
         {
@@ -151,7 +145,7 @@ internal static class SdCard
     }
 
     private static async Task<int> DeleteFiles(IEnumerable<string> filesToDelete,
-        IHubContext<ProgressHub> hubContext)
+        IHubContext<ProgressHub, IBackupProgress> hubContext)
     {
         var fileCount = 0;
         foreach (var file in filesToDelete)
@@ -164,14 +158,12 @@ internal static class SdCard
                 File.Delete(file);
 
                 sw.Stop();
-                await hubContext.Clients.All.SendAsync("ReceiveProgress",
-                    $"{sw.ElapsedMilliseconds} - {file} - Deleted");
+                await hubContext.Clients.All.ReceiveProgress($"{sw.ElapsedMilliseconds} - {Path.GetFileName(file)} - Deleted");
                 fileCount++;
             }
             catch (Exception ex)
             {
-                await hubContext.Clients.All.SendAsync("ReceiveProgress",
-                    $"Cannot delete file: {file}, {ex.Message}");
+                await hubContext.Clients.All.ReceiveProgress($"Cannot delete file: {file}, {ex.Message}");
             }
         }
 
@@ -179,7 +171,7 @@ internal static class SdCard
     }
 
     private static async Task DeleteFolders(IEnumerable<string> dirsToDelete,
-        IHubContext<ProgressHub> hubContext)
+        IHubContext<ProgressHub, IBackupProgress> hubContext)
     {
         foreach (var folder in dirsToDelete)
         {
@@ -189,8 +181,7 @@ internal static class SdCard
             }
             catch (Exception ex)
             {
-                await hubContext.Clients.All.SendAsync("ReceiveProgress",
-                    $"Cannot delete folder {folder}, {ex.Message}");
+                await hubContext.Clients.All.ReceiveProgress($"Cannot delete folder {folder}, {ex.Message}");
             }
         }
     }

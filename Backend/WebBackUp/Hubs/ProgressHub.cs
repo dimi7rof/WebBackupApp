@@ -2,10 +2,9 @@
 
 namespace WebBackUp.Hubs;
 
-internal class ProgressHub : Hub
+public interface IBackupProgress
 {
-    internal async Task SendProgressUpdate(string message)
-    {
-        await Clients.All.SendAsync("ReceiveProgress", message);
-    }
+    Task ReceiveProgress(string message);
 }
+
+internal class ProgressHub : Hub<IBackupProgress> { }
