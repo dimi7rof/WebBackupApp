@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using WebBackUp.Models;
+using static WebBackUp.Utilities.FileHelper;
 
 namespace WebBackUp.Handlers;
 
@@ -7,7 +8,6 @@ public static class LoadDataHadler
 {
     internal static IResult LoadUserData(string id)
     {
-        Console.WriteLine($"Loading UserData for id:'{id}' {DateTime.Now}");
         var filePath = GetFilePath(id);
         if (!File.Exists(filePath))
         {
@@ -15,10 +15,7 @@ public static class LoadDataHadler
         }
 
         var userData = JsonSerializer.Deserialize<UserData>(File.ReadAllText(filePath));
-        var result = Results.Ok(userData);
-        return result;
-    }
 
-    private static string GetFilePath(string setId)
-        => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "json", $"{setId}.json");
+        return Results.Ok(userData);
+    }
 }

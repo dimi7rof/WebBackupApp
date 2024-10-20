@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!--
+https://go.microsoft.com/fwlink/?LinkID=208121.
+-->
+<Project>
+  <PropertyGroup>
+    <_PublishTargetUrl>E:\GitRoot\WebBackupApp-v2\Backend\WebBackUp\bin\Release\net8.0\publish\</_PublishTargetUrl>
+    <History>True|2024-10-06T17:36:53.0923446Z;True|2024-10-06T14:15:09.9565833+03:00;False|2024-10-06T14:14:44.2646367+03:00;True|2024-10-06T14:07:18.6175674+03:00;True|2024-10-05T15:09:23.9913042+03:00;True|2024-10-05T15:01:30.8608057+03:00;True|2024-10-05T14:57:20.4074226+03:00;True|2024-10-05T09:43:13.6596032+03:00;True|2024-10-05T09:39:58.2675091+03:00;True|2024-09-29T15:48:29.1079123+03:00;</History>
+    <LastFailureDetails />
+  </PropertyGroup>
+</Project>

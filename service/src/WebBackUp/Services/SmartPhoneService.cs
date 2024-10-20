@@ -18,11 +18,12 @@ public class SmartPhoneService(IHubContext<ProgressHub, IBackupProgress> hubCont
 {
     public async Task Execute(UserData userData)
     {
+        var sw = Stopwatch.StartNew();
 
         var devices = MediaDevice.GetDevices().ToArray();
         if (devices.Length == 0)
         {
-            await hubContext.Clients.All.ReceiveProgress("Device not found!");
+            await hubContext.Clients.All.ReceiveProgress("No devices found!");
             return;
         }
 
@@ -40,20 +41,17 @@ public class SmartPhoneService(IHubContext<ProgressHub, IBackupProgress> hubCont
                 || d.FriendlyName.Contains("xiaomi", StringComparison.CurrentCultureIgnoreCase)).First();
         }
 
-        var sw = Stopwatch.StartNew();
         try
         {
             device.Connect();
         }
         catch (Exception ex)
         {
-            await hubContext.Clients.All.ReceiveProgress(
-                $"Unable to connect to device: {device.FriendlyName}! {ex.Message}");
+            await hubContext.Clients.All.ReceiveProgress($"Unable to connect to device: {device.FriendlyName}! {ex.Message}");
             return;
         }
 
-        await hubContext.Clients.All.ReceiveProgress(
-            $"Connected to the smartphone: {device.FriendlyName}");
+        await hubContext.Clients.All.ReceiveProgress($"Connected to: {device.FriendlyName}");
 
         var rootDirectory = device.GetRootDirectory();
         if (rootDirectory == null)
@@ -85,10 +83,9 @@ public class SmartPhoneService(IHubContext<ProgressHub, IBackupProgress> hubCont
             }
 
         }
-        sw.Stop();
 
-        var msg = $"Download of {count} files complete in {sw.GetElapsedTime()}.";
-        await hubContext.Clients.All.ReceiveProgress(msg);
+        sw.Stop();
+        await hubContext.Clients.All.ReceiveProgress($"Transfer of {count} files complete in {sw.GetElapsedTime()}.");
 
         device.Disconnect();
         return;

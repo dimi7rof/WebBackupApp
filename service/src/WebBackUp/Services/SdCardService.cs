@@ -6,6 +6,7 @@ using WebBackUp.Models;
 using WebBackUp.Utilities;
 
 namespace WebBackUp.Services;
+
 public interface ISdCardService
 {
     Task Execute(UserData userData);
@@ -15,21 +16,19 @@ public class SdCardService(IHubContext<ProgressHub, IBackupProgress> hubContext)
 {
     public async Task Execute(UserData userData)
     {
+        var sw = Stopwatch.StartNew();
         var totalFiles = 0;
         var deletedFiles = 0;
 
         var pathData = userData.SD.Paths;
-        var lists = pathData.SourcePaths
-            .Select((source, i) => (source, Destination: pathData.DestinationPaths[i]));
-
-        var realPathList = lists
+        var realPathList = pathData.SourcePaths
+            .Select((source, i) => (source, Destination: pathData.DestinationPaths[i]))
             .Where(x => !string.IsNullOrEmpty(x.source) && !string.IsNullOrEmpty(x.Destination))
             .Select(x => (x.source, $"{userData.SD.DeviceLetter}{x.Destination[1..]}"))
             .ToList();
 
         await hubContext.Clients.All.ReceiveProgress($"Transfer started: {DateTime.Now}");
 
-        var sw = Stopwatch.StartNew();
         foreach (var (source, destination) in realPathList)
         {
             if (userData.SD.Sync)
@@ -42,7 +41,6 @@ public class SdCardService(IHubContext<ProgressHub, IBackupProgress> hubContext)
 
         sw.Stop();
         await hubContext.Clients.All.ReceiveProgress($"Transfer of {totalFiles} files completed in {sw.GetElapsedTime()}s.");
-        return;
     }
 
     private async Task<int> CopyMissingItems(string sourcePath, string destinationPath)

@@ -18,8 +18,9 @@ public class HardDiskService(IHubContext<ProgressHub, IBackupProgress> hubContex
         await hubContext.Clients.All.ReceiveProgress("Begin backup...");
 
         var paths = userData.HDD.Paths;
-        var lists = paths.SourcePaths.Select((source, i) => (source, Destination: paths.DestinationPaths[i]));
-        var realPathList = lists
+        var realPathList = paths
+            .SourcePaths
+            .Select((source, i) => (source, Destination: paths.DestinationPaths[i]))
             .Where(x => !string.IsNullOrEmpty(x.source) && !string.IsNullOrEmpty(x.Destination))
             .Select(x => (x.source, $"{userData.HDD.DeviceLetter}{x.Destination[1..]}"))
             .ToList();

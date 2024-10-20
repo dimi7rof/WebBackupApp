@@ -1,1 +1,0 @@
-{"scripts":{"ng":"ng","start":"ng serve","build":"ng build","watch":"ng build --watch --configuration development","test":"ng test","serve:ssr:frontend-backup":"node dist/frontend-backup/server/server.mjs"},"dependencies":{"@microsoft/signalr":"^8.0.7","angular":"^1.8.3"}}

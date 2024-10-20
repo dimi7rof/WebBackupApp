@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
 using WebBackUp.Models;
+using WebBackUp.Utilities;
+using static WebBackUp.Utilities.FileHelper;
 
 namespace WebBackUp.Handlers;
 
@@ -33,17 +35,4 @@ public static class SaveDataHandler
 
         return Results.Json(new { Message = $"Input values saved successfully." });
     }
-
-    private static string GetFilePath(string setId)
-        => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "json", $"{setId}.json");
-
-    private static PathData FilterPaths(this PathData paths)
-        => new()
-        {
-            SourcePaths = paths.SourcePaths.RemoveEmptyPaths(),
-            DestinationPaths = paths.DestinationPaths.RemoveEmptyPaths(),
-        };
-
-    private static List<string> RemoveEmptyPaths(this List<string> paths)
-        => paths.Where(x => !string.IsNullOrEmpty(x)).ToList();
 }
