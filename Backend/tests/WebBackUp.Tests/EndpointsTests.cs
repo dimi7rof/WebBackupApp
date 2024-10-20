@@ -1,5 +1,8 @@
+using System.Runtime.Versioning;
+
 namespace WebBackUp.Tests;
 
+[SupportedOSPlatform("Windows")]
 public class EndpointsTests
 {
     [Test]

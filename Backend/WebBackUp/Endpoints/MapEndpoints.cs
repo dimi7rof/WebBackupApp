@@ -1,15 +1,17 @@
-﻿namespace WebBackUp.Endpoints;
+﻿using WebBackUp.Handlers;
+
+namespace WebBackUp.Endpoints;
 
 internal static class MapEndpoints
 {
     internal static void Map(this WebApplication app)
     {
-        app.MapGet("/loaduserdata/{id}", Endpoints.LoadUserData);
-        app.MapPost("/saveuserdata/{id}", Endpoints.SaveUserData);
+        app.MapGet("/loaduserdata/{id}", LoadDataHadler.LoadUserData);
+        app.MapPost("/saveuserdata/{id}", SaveDataHandler.SaveUserData);
 
-        app.MapPost("/execute/Phone", Utilities.Phone.Execute);
-        app.MapPost("/execute/HDD", Utilities.Hdd.Execute);
-        app.MapPost("/execute/SdCard", Utilities.SdCard.Execute);
+        app.MapPost("/execute/Phone", SmartPhoneHandler.TransferFiles);
+        app.MapPost("/execute/HDD", HardDiskHandler.TransferFiles);
+        app.MapPost("/execute/SdCard", SdCardHandler.TransferFiles);
 
     }
 }

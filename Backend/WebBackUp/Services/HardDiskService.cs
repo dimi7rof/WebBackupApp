@@ -1,14 +1,19 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SignalR;
+﻿using Microsoft.AspNetCore.SignalR;
 using System.Diagnostics;
 using WebBackUp.Hubs;
 using WebBackUp.Models;
+using WebBackUp.Utilities;
 
-namespace WebBackUp.Utilities;
+namespace WebBackUp.Services;
 
-internal static class Hdd
+public interface IHardDiskService
 {
-    internal static async Task Execute([FromBody]UserData userData, IHubContext<ProgressHub, IBackupProgress> hubContext)
+    Task Execute(UserData userData);
+}
+
+public class HardDiskService(IHubContext<ProgressHub, IBackupProgress> hubContext) : IHardDiskService
+{
+    public async Task Execute(UserData userData)
     {
         await hubContext.Clients.All.ReceiveProgress("Begin backup...");
 
@@ -24,15 +29,14 @@ internal static class Hdd
         var sw = Stopwatch.StartNew();
         foreach (var (source, destination) in realPathList)
         {
-            await CopyDirectoriesAndFiles(source, destination, hubContext);
+            await CopyDirectoriesAndFiles(source, destination);
         }
 
         sw.Stop();
-        await hubContext.Clients.All.ReceiveProgress($"Backup completed in {sw.Elapsed.Hours}h:{sw.Elapsed.Minutes}m:{sw.Elapsed.Seconds}s.");
+        await hubContext.Clients.All.ReceiveProgress($"Backup completed in {sw.GetElapsedTime()}.");
     }
 
-    private static async Task CopyDirectoriesAndFiles(string source, string destination,
-        IHubContext<ProgressHub, IBackupProgress> hubContext)
+    private async Task CopyDirectoriesAndFiles(string source, string destination)
     {
         if (!Directory.Exists(source))
         {
@@ -96,7 +100,7 @@ internal static class Hdd
                 }
             }
 
-            await CopyDirectoriesAndFiles(sourceDir, destinationDir, hubContext);
+            await CopyDirectoriesAndFiles(sourceDir, destinationDir);
         }
     }
 }

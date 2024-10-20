@@ -7,4 +7,4 @@ public interface IBackupProgress
     Task ReceiveProgress(string message);
 }
 
-internal class ProgressHub : Hub<IBackupProgress> { }
+public class ProgressHub : Hub<IBackupProgress> { }

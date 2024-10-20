@@ -1,15 +1,19 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SignalR;
+﻿using Microsoft.AspNetCore.SignalR;
 using NAudio.Wave;
 using System.Diagnostics;
 using WebBackUp.Hubs;
 using WebBackUp.Models;
+using WebBackUp.Utilities;
 
-namespace WebBackUp.Utilities;
-
-internal static class SdCard
+namespace WebBackUp.Services;
+public interface ISdCardService
 {
-    internal static async Task Execute([FromBody] UserData userData, IHubContext<ProgressHub, IBackupProgress> hubContext)
+    Task Execute(UserData userData);
+}
+
+public class SdCardService(IHubContext<ProgressHub, IBackupProgress> hubContext) : ISdCardService
+{
+    public async Task Execute(UserData userData)
     {
         var totalFiles = 0;
         var deletedFiles = 0;
@@ -30,20 +34,18 @@ internal static class SdCard
         {
             if (userData.SD.Sync)
             {
-                deletedFiles += await DeleteFilesAndFolders(source, destination, hubContext);
+                deletedFiles += await DeleteFilesAndFolders(source, destination);
             }
 
-            totalFiles += await CopyMissingItems(source, destination, hubContext);
+            totalFiles += await CopyMissingItems(source, destination);
         }
 
         sw.Stop();
-        await hubContext.Clients.All.ReceiveProgress(
-            $"Transfer of {totalFiles} files completed in {sw.Elapsed.Hours}h:{sw.Elapsed.Minutes}m:{sw.Elapsed.Seconds}s.");
+        await hubContext.Clients.All.ReceiveProgress($"Transfer of {totalFiles} files completed in {sw.GetElapsedTime()}s.");
         return;
     }
 
-    private static async Task<int> CopyMissingItems(string sourcePath, string destinationPath,
-        IHubContext<ProgressHub, IBackupProgress> hubContext)
+    private async Task<int> CopyMissingItems(string sourcePath, string destinationPath)
     {
         if (!Directory.Exists(sourcePath))
         {
@@ -123,8 +125,7 @@ internal static class SdCard
         return fileCount;
     }
 
-    private static async Task<int> DeleteFilesAndFolders(string sourcePath,
-        string destinationPath, IHubContext<ProgressHub, IBackupProgress> hubContext)
+    private async Task<int> DeleteFilesAndFolders(string sourcePath, string destinationPath)
     {
         if (!Directory.Exists(sourcePath) || !Directory.Exists(destinationPath))
         {
@@ -137,15 +138,14 @@ internal static class SdCard
         var filesToDelete = Directory.GetFiles(destinationPath, "*", SearchOption.AllDirectories)
             .Where(destinationFile => !File.Exists(Path.Combine(sourcePath, GetRelativePath(destinationPath, destinationFile))));
 
-        await DeleteFolders(dirsToDelete, hubContext);
+        await DeleteFolders(dirsToDelete);
 
-        var fileCount = await DeleteFiles(filesToDelete, hubContext);
+        var fileCount = await DeleteFiles(filesToDelete);
 
         return fileCount;
     }
 
-    private static async Task<int> DeleteFiles(IEnumerable<string> filesToDelete,
-        IHubContext<ProgressHub, IBackupProgress> hubContext)
+    private async Task<int> DeleteFiles(IEnumerable<string> filesToDelete)
     {
         var fileCount = 0;
         foreach (var file in filesToDelete)
@@ -170,8 +170,7 @@ internal static class SdCard
         return fileCount;
     }
 
-    private static async Task DeleteFolders(IEnumerable<string> dirsToDelete,
-        IHubContext<ProgressHub, IBackupProgress> hubContext)
+    private async Task DeleteFolders(IEnumerable<string> dirsToDelete)
     {
         foreach (var folder in dirsToDelete)
         {
@@ -186,7 +185,7 @@ internal static class SdCard
         }
     }
 
-    static string GetRelativePath(string basePath, string fullPath)
+    private static string GetRelativePath(string basePath, string fullPath)
     {
         return Path.GetRelativePath(basePath, fullPath);
     }

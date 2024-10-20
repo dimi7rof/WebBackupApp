@@ -1,17 +1,22 @@
 ﻿using MediaDevices;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using System.Diagnostics;
 using System.Runtime.Versioning;
 using WebBackUp.Hubs;
 using WebBackUp.Models;
+using WebBackUp.Utilities;
 
-namespace WebBackUp.Utilities;
+namespace WebBackUp.Services;
+
+public interface ISmartPhoneService
+{
+    Task Execute(UserData userData);
+}
 
 [SupportedOSPlatform("Windows")]
-internal static class Phone
+public class SmartPhoneService(IHubContext<ProgressHub, IBackupProgress> hubContext) : ISmartPhoneService
 {
-    internal static async Task Execute([FromBody] UserData userData, IHubContext<ProgressHub, IBackupProgress> hubContext)
+    public async Task Execute(UserData userData)
     {
 
         var devices = MediaDevice.GetDevices().ToArray();
@@ -72,25 +77,25 @@ internal static class Phone
         {
             if ($"{destination[1]}{destination[2]}" == ":\\")
             {
-                count += await CopyToPc(source, destination, internalStorage, dcim, hubContext);
+                count += await CopyToPc(source, destination, internalStorage, dcim);
             }
             else
             {
-                await CopyToPhone(device, source, destination, internalStorage, hubContext);
+                await CopyToPhone(device, source, destination, internalStorage);
             }
 
         }
         sw.Stop();
 
-        var msg = $"Download of {count} files complete in {sw.Elapsed.Hours}h:{sw.Elapsed.Minutes}m:{sw.Elapsed.Seconds}s.";
+        var msg = $"Download of {count} files complete in {sw.GetElapsedTime()}.";
         await hubContext.Clients.All.ReceiveProgress(msg);
 
         device.Disconnect();
         return;
     }
 
-    private static async Task CopyToPhone(MediaDevice device, string source, string destination,
-        MediaDirectoryInfo internalStorage, IHubContext<ProgressHub, IBackupProgress> hubContext)
+    private async Task CopyToPhone(MediaDevice device, string source, string destination,
+        MediaDirectoryInfo internalStorage)
     {
         var sw = Stopwatch.StartNew();
         var download = @"Internal shared storage\Download"; ;
@@ -143,8 +148,8 @@ internal static class Phone
         await hubContext.Clients.All.ReceiveProgress(msg);
     }
 
-    private static async Task<int> CopyToPc(string source, string destination, MediaDirectoryInfo internalStorage,
-        MediaDirectoryInfo dcim, IHubContext<ProgressHub, IBackupProgress> hubContext)
+    private async Task<int> CopyToPc(string source, string destination, MediaDirectoryInfo internalStorage,
+        MediaDirectoryInfo dcim)
     {
         if (!Directory.Exists(destination))
         {
@@ -186,12 +191,11 @@ internal static class Phone
 
         await hubContext.Clients.All.ReceiveProgress($"Found {missingFiles.Count} new files for {destination}...");
 
-        await CopyFiles(missingFiles, destination, hubContext);
+        await CopyFiles(missingFiles, destination);
         return missingFiles.Count;
     }
 
-    private static async Task CopyFiles(List<MediaFileInfo> missingFiles, string destination,
-        IHubContext<ProgressHub, IBackupProgress> hubContext)
+    private async Task CopyFiles(List<MediaFileInfo> missingFiles, string destination)
     {
         foreach (var file in missingFiles)
         {
@@ -208,4 +212,3 @@ internal static class Phone
         }
     }
 }
-
