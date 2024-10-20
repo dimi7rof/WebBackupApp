@@ -80,7 +80,6 @@ export class UserDataService {
         console.log('Post request completed.');
       });
   }
-  
 
   clearCache() {
     this.userData = undefined;

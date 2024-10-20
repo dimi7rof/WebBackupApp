@@ -1,4 +1,4 @@
 @echo off
 
-cd Frontend\backup-app
+cd application\backup-app
 start "" "cmd /c ng serve"

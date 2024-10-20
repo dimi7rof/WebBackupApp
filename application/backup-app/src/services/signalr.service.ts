@@ -29,12 +29,4 @@ export class SignalRService {
       this.hubConnection.on('ReceiveProgress', callback); // 'ReceiveProgress' is the event name
     }
   }
-
-  // Send messages to the hub if needed (optional)
-  public sendProgressUpdate(progress: any): void {
-    if (this.hubConnection) {
-      this.hubConnection.invoke('UpdateProgress', progress) // 'UpdateProgress' is a server-side hub method
-        .catch(err => console.error(err));
-    }
-  }
 }
