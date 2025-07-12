@@ -4,8 +4,14 @@ updates:
     directory: "/application/backup-app/"
     schedule:
       interval: "weekly"
+    groups:
+      npm-deps:
+        patterns: ["*"]
 
   - package-ecosystem: "nuget"
     directory: "/service/"
     schedule:
       interval: "weekly"
+    groups:
+      nuget-deps:
+        patterns: ["*"]
