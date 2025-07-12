@@ -91,7 +91,7 @@ public class SdCardService(IHubContext<ProgressHub, IBackupProgress> hubContext)
                     await hubContext.Clients.All.ReceiveProgress($"[Warning] Low bitrate: {bitRate}: '{destinationFilePath}'");
                 }
 
-                msg = $"{bitRate}kbps | {mp3.SampleRate}Hz | {mp3.Encoding} | {mp3.Channels} channels";
+                msg = $"{bitRate}kbps | {mp3.SampleRate}Hz";
 
                 var destinationDir = string.Join(Path.DirectorySeparatorChar,
                     destinationFilePath.Split(Path.DirectorySeparatorChar).SkipLast(1));

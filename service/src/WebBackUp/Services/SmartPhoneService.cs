@@ -14,7 +14,7 @@ public interface ISmartPhoneService
 }
 
 [SupportedOSPlatform("Windows")]
-public class SmartPhoneService(IHubContext<ProgressHub, IBackupProgress> hubContext) : ISmartPhoneService
+public class SmartPhoneService(IHubContext<ProgressHub, IBackupProgress> hubContext, ILogger<SmartPhoneService> logger) : ISmartPhoneService
 {
     public async Task Execute(UserData userData)
     {
@@ -23,6 +23,7 @@ public class SmartPhoneService(IHubContext<ProgressHub, IBackupProgress> hubCont
         var devices = MediaDevice.GetDevices().ToArray();
         if (devices.Length == 0)
         {
+            await SendMessage("No devices found!", hubContext, logger);
             await hubContext.Clients.All.ReceiveProgress("No devices found!");
             return;
         }
@@ -51,7 +52,7 @@ public class SmartPhoneService(IHubContext<ProgressHub, IBackupProgress> hubCont
             return;
         }
 
-        await hubContext.Clients.All.ReceiveProgress($"Connected to: {device.FriendlyName}");
+        await hubContext.Clients.All.ReceiveProgress($"Connected to: {device.Model}");
 
         var rootDirectory = device.GetRootDirectory();
         if (rootDirectory == null)
@@ -196,16 +197,35 @@ public class SmartPhoneService(IHubContext<ProgressHub, IBackupProgress> hubCont
     {
         foreach (var file in missingFiles)
         {
-            var sw1 = Stopwatch.StartNew();
             var filePath = Path.Combine(destination, file.Name);
+            await hubContext.Clients.All.ReceiveProgress(
+                $"Copying {filePath}...");
 
+            var sw = Stopwatch.StartNew();
             using var stream = file.OpenRead();
             using var fileStream = File.Create(filePath);
-            stream.CopyTo(fileStream);
 
-            sw1.Stop();
-            var time = double.Parse(sw1.ElapsedMilliseconds.ToString()) / 1000;
-            await hubContext.Clients.All.ReceiveProgress($"{time}s - {filePath}");
+            long totalBytes = 0;
+            byte[] buffer = new byte[81920]; // default buffer size
+            int bytesRead;
+            while ((bytesRead = await stream.ReadAsync(buffer)) > 0)
+            {
+                await fileStream.WriteAsync(buffer.AsMemory(0, bytesRead));
+                totalBytes += bytesRead;
+            }
+
+            sw.Stop();
+            var seconds = sw.Elapsed.TotalSeconds;
+            var speedMbps = (totalBytes) / (seconds * 1_000_000); // Convert bytes to megabytes
+
+            await hubContext.Clients.All.ReceiveProgress(
+                $"{seconds:F2}s ({speedMbps:F2} MBps) {filePath}");
         }
+    }
+
+    private static async Task SendMessage(string message, IHubContext<ProgressHub, IBackupProgress> hubContext, ILogger<SmartPhoneService> logger)
+    {
+        await hubContext.Clients.All.ReceiveProgress(message);
+        logger.LogInformation(message);
     }
 }

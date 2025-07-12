@@ -4,8 +4,8 @@ https://go.microsoft.com/fwlink/?LinkID=208121.
 -->
 <Project>
   <PropertyGroup>
-    <_PublishTargetUrl>E:\C Sharp\WebBackUp\WebBackUp\bin\Release\net8.0\publish\</_PublishTargetUrl>
-    <History>True|2024-08-31T11:35:17.2124058Z;True|2024-08-31T14:31:22.1399554+03:00;True|2024-08-31T14:29:11.3020263+03:00;True|2024-08-31T14:28:18.9025593+03:00;</History>
+    <_PublishTargetUrl>E:\GitRoot\WebBackupApp-v2\service\src\WebBackUp\bin\Release\net8.0\publish\</_PublishTargetUrl>
+    <History>True|2024-10-21T17:28:19.0612972Z;True|2024-10-20T13:54:49.4112997+03:00;True|2024-08-31T14:35:17.2124058+03:00;True|2024-08-31T14:31:22.1399554+03:00;True|2024-08-31T14:29:11.3020263+03:00;True|2024-08-31T14:28:18.9025593+03:00;</History>
     <LastFailureDetails />
   </PropertyGroup>
 </Project>
