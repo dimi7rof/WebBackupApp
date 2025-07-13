@@ -1,0 +1,50 @@
+name: PR - Build Angular & .NET
+
+on:
+  pull_request:
+    branches: ["*.*.*"]
+
+jobs:
+  build-angular:
+    name: Build Angular App
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./application/backup-app/
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Build Angular app
+        run: npm run build --
+
+  build-dotnet:
+    name: Build .NET App
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./service/
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+
+      - name: Restore NuGet packages
+        run: dotnet restore
+
+      - name: Build .NET app
+        run: dotnet build --configuration Release --no-restore

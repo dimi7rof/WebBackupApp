@@ -20,7 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\WebBackUp\WebBackUp.csproj" />
+    <ProjectReference Include="..\..\src\WebBackUp\WebBackUp.csproj" />
   </ItemGroup>
 
 </Project>
