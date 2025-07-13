@@ -2,7 +2,7 @@ name: PR - Build Angular & .NET
 
 on:
   pull_request:
-    branches: ["*.*.*"]
+    branches: ["*"]
 
 jobs:
   build-angular:
