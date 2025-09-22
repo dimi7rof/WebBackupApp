@@ -3,7 +3,6 @@ import { MainComponent } from './main/main.component';
 
 @Component({
   selector: 'app-root',
-  standalone: true,
   imports: [MainComponent],
   templateUrl: './app.component.html',
 })

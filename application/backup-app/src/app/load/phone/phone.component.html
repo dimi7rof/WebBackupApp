@@ -1,14 +1,17 @@
 @if (phoneData) {
 <div id="pathsContainer">
-  <span *ngFor="let source of phoneData.paths.sourcePaths; let i = index" class="input-row">
-    <label [for]="'sourcePath' + i">From {{ i + 1 }}:</label>
-    <input type="text" [id]="'sourcePath' + i" [name]="'sourcePath' + i" [(ngModel)]="phoneData.paths.sourcePaths[i]"
-      (input)="onInputChange(i)" required>
+  @for (source of phoneData.paths.sourcePaths; track $index) {
+  <span class="input-row">
+    <label [for]="'sourcePath' + $index">{{ $index + 1 }}: From</label>
+    <input type="text" [id]="'sourcePath' + $index" [name]="'sourcePath' + $index"
+      [(ngModel)]="phoneData.paths.sourcePaths[$index]" (input)="onInputChange($index)" required>
 
-    <label id="destination" [for]="'destinationPath' + i">To {{ i + 1 }}:</label>
-    <input id="destinationInput" type="text" [id]="'destinationPath' + i" [name]="'destinationPath' + i"
-      [(ngModel)]="phoneData.paths.destinationPaths[i]" (input)="onInputChange(i)" required>
+    <label id="destination" [for]="'destinationPath' + $index">to:</label>
+    <input id="destinationInput" type="text" [id]="'destinationPath' + $index" [name]="'destinationPath' + $index"
+      [(ngModel)]="phoneData.paths.destinationPaths[$index]" (input)="onInputChange($index)" required>
+    <button type="button" class="delete-btn" (click)="deletePath($index)">Delete</button>
   </span>
+  }
 </div>
 } @if (!phoneData) {
 <p>No data available to display.</p>

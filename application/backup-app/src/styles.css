@@ -108,7 +108,6 @@ li:active {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 15px;
 }
 
 .styled-input {
@@ -153,7 +152,8 @@ input[type="checkbox"]:checked + .checkbox-label {
 }
 
 .execute-btn,
-.save-btn {
+.save-btn,
+.delete-btn {
   border: none;
   padding: 10px 20px;
   font-size: 16px;
@@ -169,6 +169,12 @@ input[type="checkbox"]:checked + .checkbox-label {
 
 .execute-btn:hover {
   background-color: #0056b3;
+}
+
+.delete-btn {
+  background-color: #ff4d4d;
+  padding: 0px 5px;
+  font-size: 14px;
 }
 
 .save-btn {

@@ -15,41 +15,50 @@ export class UserDataService {
   getUserData(userId: string): Observable<UserData> {
     if (this.userData) {
       return new Observable((observer) => {
-        observer.next(this.userData);
+        observer.next(this.userData!);
         observer.complete();
       });
     } else {
-      return this.http.get<UserData>(`http://localhost:5000/loaduserdata/${userId}`).pipe(
-        tap((data) => {
-          this.userData = data; // Cache the data
-        })
-      );
+      return this.http
+        .get<UserData>(`http://localhost:5000/loaduserdata/${userId}`)
+        .pipe(
+          tap((data) => {
+            this.userData = data; // Cache the data
+          })
+        );
     }
   }
 
   execute(data: any, component: string) {
     // Clean up the source and destination paths by removing any empty values
     const cleanedData = { ...data };
-    
+
     if (cleanedData.paths) {
-      cleanedData.paths.sourcePaths = cleanedData.paths.sourcePaths.filter((path: string) => path.trim() !== '');
-      cleanedData.paths.destinationPaths = cleanedData.paths.destinationPaths.filter((path: string) => path.trim() !== '');
+      cleanedData.paths.sourcePaths = cleanedData.paths.sourcePaths.filter(
+        (path: string) => path.trim() !== ''
+      );
+      cleanedData.paths.destinationPaths =
+        cleanedData.paths.destinationPaths.filter(
+          (path: string) => path.trim() !== ''
+        );
     }
 
     // Proceed with the cleaned data
-    this.http.post(`http://localhost:5000/execute/${component}`, cleanedData, {
-      headers: new HttpHeaders({ 'Content-Type': 'application/json' }),
-    }).subscribe({
-      next: (response) => {
-        console.log('Post request successful. Response:', response);
-      },
-      error: (err) => {
-        console.error('Error executing request:', err);
-      },
-      complete: () => {
-        console.log('Post request completed.');
-      },
-    });
+    this.http
+      .post(`http://localhost:5000/execute/${component}`, cleanedData, {
+        headers: new HttpHeaders({ 'Content-Type': 'application/json' }),
+      })
+      .subscribe({
+        next: (response) => {
+          console.log('Post request successful. Response:', response);
+        },
+        error: (err) => {
+          console.error('Error executing request:', err);
+        },
+        complete: () => {
+          console.log('Post request completed.');
+        },
+      });
   }
 
   save(data: UserData, id: string): void {
@@ -57,7 +66,7 @@ export class UserDataService {
     const headers = {
       'Content-Type': 'application/json',
     };
-  
+
     fetch(url, {
       method: 'POST',
       headers: headers,

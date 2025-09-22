@@ -5,7 +5,6 @@ import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-sd',
-  standalone: true,  
   imports: [CommonModule, FormsModule],
   templateUrl: './sd.component.html',
 })
