@@ -1,6 +1,8 @@
 name: PR - Build Angular & .NET
 
 on:
+  push:
+    branches: ["*"]
   pull_request:
     branches: ["*"]
 
