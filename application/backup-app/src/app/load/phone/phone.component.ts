@@ -35,4 +35,11 @@ export class PhoneComponent {
       }
     }
   }
+
+  deletePath(index: number): void {
+    if (this.phoneData) {
+      this.phoneData.paths.sourcePaths.splice(index, 1);
+      this.phoneData.paths.destinationPaths.splice(index, 1);
+    }
+  }
 }

@@ -2,13 +2,14 @@
 <div id="pathsContainer">
   @for (source of phoneData.paths.sourcePaths; track $index) {
   <span class="input-row">
-    <label [for]="'sourcePath' + $index">From {{ $index + 1 }}:</label>
+    <label [for]="'sourcePath' + $index">{{ $index + 1 }}: From</label>
     <input type="text" [id]="'sourcePath' + $index" [name]="'sourcePath' + $index"
       [(ngModel)]="phoneData.paths.sourcePaths[$index]" (input)="onInputChange($index)" required>
 
-    <label id="destination" [for]="'destinationPath' + $index">To {{ $index + 1 }}:</label>
+    <label id="destination" [for]="'destinationPath' + $index">to:</label>
     <input id="destinationInput" type="text" [id]="'destinationPath' + $index" [name]="'destinationPath' + $index"
       [(ngModel)]="phoneData.paths.destinationPaths[$index]" (input)="onInputChange($index)" required>
+    <button type="button" class="delete-btn" (click)="deletePath($index)">Delete</button>
   </span>
   }
 </div>
