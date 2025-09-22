@@ -1,41 +1,34 @@
 <div class="type">
-    <ul>
-        <li 
-        [ngClass]="{ 'active': selectedComponent === 'Phone' }" 
-        (click)="selectComponent('Phone')">Phone</li>    
-      <li 
-        [ngClass]="{ 'active': selectedComponent === 'HDD' }" 
-        (click)="selectComponent('HDD')">HDD</li>    
-      <li 
-        [ngClass]="{ 'active': selectedComponent === 'SdCard' }" 
-        (click)="selectComponent('SdCard')">SDCard</li>        
-      </ul>    
+  <ul>
+    <li [ngClass]="{ 'active': selectedComponent === 'Phone' }" (click)="selectComponent('Phone')">Phone</li>
+    <li [ngClass]="{ 'active': selectedComponent === 'HDD' }" (click)="selectComponent('HDD')">HDD</li>
+    <li [ngClass]="{ 'active': selectedComponent === 'SdCard' }" (click)="selectComponent('SdCard')">SDCard</li>
+  </ul>
 </div>
 
 <div class="currentComponent">
-    <!-- Dynamically load components using *ngIf -->
-    <app-phone *ngIf="selectedComponent === 'Phone'"
-      [phoneData]="data?.phone"
-    ></app-phone>
-    <app-hdd *ngIf="selectedComponent === 'HDD'"
-      [data]="data?.hdd"
-    ></app-hdd>
-    <app-sd *ngIf="selectedComponent === 'SdCard'"
-      [data]="data?.sd"
-    ></app-sd>
-  </div>
-  
-  <div class="buttons">
-    <button (click)="save()" class="save-btn">Save</button>
-    <button (click)="execute()" class="execute-btn">Execute</button>
-  </div>
+  @if (selectedComponent === 'Phone') {
+  <app-phone [phoneData]="data?.phone"></app-phone>
+  }
+  @if (selectedComponent === 'HDD') {
+  <app-hdd [data]="data?.hdd"></app-hdd>
+  }
+  @if (selectedComponent === 'SdCard') {
+  <app-sd [data]="data?.sd"></app-sd>
+  }
+</div>
 
-  <div class="progressContainer">
-    <div *ngIf="progressData" id="progress">
-      <span *ngFor="let progress of progressData">
-        <p>{{ progress }}</p>
-      </span>
-    </div>
-  </div>
-  
-  
+<div class="buttons">
+  <button (click)="save()" class="save-btn">Save</button>
+  <button (click)="execute()" class="execute-btn">Execute</button>
+</div>
+
+<div class="progressContainer">
+  @if (progressData) {
+  @for (progress of progressData; track progress) {
+  <span>
+    <p>{{ progress }}</p>
+  </span>
+  }
+  }
+</div>

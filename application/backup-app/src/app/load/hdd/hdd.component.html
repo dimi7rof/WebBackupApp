@@ -1,27 +1,31 @@
-<div id="pathsContainer" *ngIf="data; else noData">
-    <span class="input-row">
-        <!-- Device Letter Input -->
-        <label for="deviceLetter">Device Letter:</label>
-        <select id="deviceLetter" [(ngModel)]="data.deviceLetter">
-            <option value="D">D</option>
-            <option value="E">E</option>
-            <option value="F">F</option>
-            <option value="G">G</option>
-            <option value="H">H</option>
-          </select> 
-          <span></span>
-          <span></span>         
-          <span></span>         
-      </span>
+@if (data) {
+<div id="pathsContainer">
+  <span class="input-row">
+    <!-- Device Letter Input -->
+    <label for="deviceLetter">Device Letter:</label>
+    <select id="deviceLetter" [(ngModel)]="data.deviceLetter">
+      <option value="D">D</option>
+      <option value="E">E</option>
+      <option value="F">F</option>
+      <option value="G">G</option>
+      <option value="H">H</option>
+    </select>
+    <span></span>
+    <span></span>
+    <span></span>
+  </span>
 
-    <span *ngFor="let source of data.paths.sourcePaths; let i = index" class="input-row">
-      <label [for]="'sourcePath' + i">Source {{ i + 1 }}:</label>
-      <input type="text" [id]="'sourcePath' + i" [name]="'sourcePath' + i" [value]="source" required>
-      <label id="destination" [for]="'destinationPath' + i">Destination {{ i + 1 }}:</label>
-      <input type="text" [id]="'destinationPath' + i" [name]="'destinationPath' + i" [value]="data.paths.destinationPaths[i]" required>
-    </span>
+  @for (source of data.paths.sourcePaths; track $index) {
+  <span class="input-row">
+    <label [for]="'sourcePath' + $index">Source {{ $index + 1 }}:</label>
+    <input type="text" [id]="'sourcePath' + $index" [name]="'sourcePath' + $index" [value]="source" required>
+    <label id="destination" [for]="'destinationPath' + $index">Destination {{ $index + 1 }}:</label>
+    <input type="text" [id]="'destinationPath' + $index" [name]="'destinationPath' + $index"
+      [value]="data.paths.destinationPaths[$index]" required>
+  </span>
+  }
 </div>
-
-<ng-template #noData>
-  <p>No data available to display.</p>
-</ng-template>
+}
+@else {
+<p>No data available to display.</p>
+}

@@ -5,11 +5,10 @@ import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-phone',
-  standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './phone.component.html',
 })
-export class PhoneComponent{
+export class PhoneComponent {
   @Input() phoneData: Phone | undefined;
 
   addNewPath(): void {
@@ -21,9 +20,15 @@ export class PhoneComponent{
 
   onInputChange(index: number): void {
     if (this.phoneData) {
-      const lastSource = this.phoneData.paths.sourcePaths[this.phoneData.paths.sourcePaths.length - 1];
-      const lastDestination = this.phoneData.paths.destinationPaths[this.phoneData.paths.destinationPaths.length - 1];
-      
+      const lastSource =
+        this.phoneData.paths.sourcePaths[
+          this.phoneData.paths.sourcePaths.length - 1
+        ];
+      const lastDestination =
+        this.phoneData.paths.destinationPaths[
+          this.phoneData.paths.destinationPaths.length - 1
+        ];
+
       // If both the last source and destination paths are filled, add a new empty path
       if (lastSource && lastDestination) {
         this.addNewPath();

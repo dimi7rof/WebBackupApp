@@ -8,7 +8,6 @@ import { SignalRService } from '../../services/signalr.service';
 
 @Component({
   selector: 'main-component',
-  standalone: true,
   imports: [CommonModule, PhoneComponent, HDDComponent, SDComponent],
   templateUrl: './main.component.html',
 })
