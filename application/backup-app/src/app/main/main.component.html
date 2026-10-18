@@ -26,9 +26,7 @@
 <div class="progressContainer">
   @if (progressData) {
   @for (progress of progressData; track progress) {
-  <span>
-    <p>{{ progress }}</p>
-  </span>
+  <div class="progressMessage">{{ progress }}</div>
   }
   }
 </div>

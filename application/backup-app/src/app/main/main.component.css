@@ -1,0 +1,32 @@
+.progressContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  max-height: 300px;
+  overflow-y: auto;
+  background-image: linear-gradient(0deg, #585858, #dddddd);
+  border: 2px solid #ccc;
+  border-radius: 10px;
+  margin: 20px auto;
+  width: 70vw;
+  max-width: 800px;
+}
+
+.progressMessage {
+  background: rgba(255, 255, 255, 0.8);
+  padding: 12px 16px;
+  border-radius: 6px;
+  border: 1px solid #aaa;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  font-family: "Courier New", monospace;
+  font-size: 13px;
+  color: #333;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  min-height: 24px;
+}
+
+.progressMessage:first-child {
+  border-left: 4px solid #007bff;
+}
